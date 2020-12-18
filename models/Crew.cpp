@@ -96,30 +96,30 @@ void Crew::update(int width, int height) {
         int stuck_right = false;
         for(auto line: game_map.tiles) {
             if(line.side==0) {// face down
-                if(pos_y-h/2 >= line.y1-y1_offset-speed && pos_y-h/2<=line.y1 - y1_offset && pos_x+w/2>line.x1-x1_offset && pos_x-w/2<line.x2+x2_offset
+                if(pos_y-h/2 >= line.y1-speed && pos_y-h/2<=line.y1 && pos_x+w/2>line.x1 && pos_x-w/2<line.x2
                     && (this->direction==4 || this->direction==5 || this->direction==6 || this->direction==7)) {
-                    pos_y = line.y1+h/2 - y1_offset;
+                    pos_y = line.y1+h/2;
                     stuck_up = true;
                 }
             }
             if(line.side==1) {// face up
-                if(pos_y <= line.y1-y2_offset+speed && pos_y>=line.y1 - y2_offset && pos_x>line.x1-x1_offset && pos_x<line.x2+x2_offset
+                if(pos_y+h/2 <= line.y1+speed && pos_y+h/2>=line.y1 && pos_x+w/2>line.x1 && pos_x-w/2<line.x2
                     && (this->direction==8 || this->direction==9 || this->direction==10 || this->direction==11)) {
-                    pos_y = line.y1 - y2_offset;
+                    pos_y = line.y1-h/2;
                     stuck_down = true;
                 }
             }
             if(line.side==2) {// face left
-                if(pos_x <= line.x1-x1_offset+speed && pos_x>=line.x1 - x1_offset && pos_y>line.y1-y1_offset && pos_y<line.y2-y2_offset
+                if(pos_x+w/2 <= line.x1+speed && pos_x+w/2>=line.x1 && pos_y+h/2>line.y1 && pos_y-h/2<line.y2
                     && (this->direction==2 || this->direction==6 || this->direction==10 || this->direction==14)) {
-                    pos_x = line.x1 - x1_offset;
+                    pos_x = line.x1-w/2;
                     stuck_right = true;
                 }
             }
             if(line.side==3) {// face right
-                if(pos_x >= line.x1+x2_offset-speed && pos_x<=line.x1+x2_offset && pos_y>line.y1-y1_offset && pos_y<line.y2-y2_offset
+                if(pos_x-w/2 >= line.x1-speed && pos_x-w/2<=line.x1 && pos_y+h/2>line.y1 && pos_y-h/2<line.y2
                     && (this->direction==1 || this->direction==5 || this->direction==9 || this->direction==13)) {
-                    pos_x = line.x1+x2_offset;
+                    pos_x = line.x1+w/2;
                     stuck_left = true;
                 }
             }

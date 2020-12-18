@@ -331,10 +331,10 @@ GameWindow::draw()
     // draw to screen
     al_set_target_bitmap(screen);
     al_clear_to_color(BLACK);
-    al_draw_scaled_bitmap(fbo, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, 0, width/2, height, 0);
-    al_draw_scaled_bitmap(fbo, crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, 0, width/2, height, 0);
-    // al_draw_bitmap_region(fbo, crew1.getPosition()['x']-width/4, crew1.getPosition()['y']-height/2, width/2, height, 0, 0, 0);
-    // al_draw_bitmap_region(fbo, crew2.getPosition()['x']-width/4, crew2.getPosition()['y']-height/2, width/2, height, width/2, 0, 0);
+    // al_draw_scaled_bitmap(fbo, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, 0, width/2, height, 0);
+    // al_draw_scaled_bitmap(fbo, crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, 0, width/2, height, 0);
+    al_draw_bitmap_region(fbo, crew1.getPosition()['x']-width/4, crew1.getPosition()['y']-height/2, width/2, height, 0, 0, 0);
+    al_draw_bitmap_region(fbo, crew2.getPosition()['x']-width/4, crew2.getPosition()['y']-height/2, width/2, height, width/2, 0, 0);
     al_draw_filled_rectangle(width/2-5, 0, width/2+5, height, BLACK);
 
     al_flip_display();
