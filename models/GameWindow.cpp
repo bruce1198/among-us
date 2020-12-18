@@ -95,8 +95,8 @@ GameWindow::GameWindow()
     width = info.x2 - info.x1;
     height = info.y2 - info.y1;
     // width = 1920;
-    height = 768;
-    // al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
+    height = height/2;
+    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
     display = al_create_display(width, height);
     event_queue = al_create_event_queue();
 
@@ -250,6 +250,11 @@ GameWindow::process_event()
             case ALLEGRO_KEY_P:
                 /*TODO: handle pause event here*/
                 break;
+            case ALLEGRO_KEY_L:
+                gmap.load_lines();
+                crew1.reload();
+                crew2.reload();
+                break;
             case ALLEGRO_KEY_M:
                 mute = !mute;
                 if(mute)
@@ -306,9 +311,9 @@ GameWindow::process_event()
         instruction = update();
 
         // Re-draw map
+        draw();
         redraw = false;
     }
-    draw();
 
     return instruction;
 }
@@ -324,18 +329,21 @@ GameWindow::draw()
     for(auto line: gmap.tiles) {
         al_draw_line(line.x1, line.y1, line.x2, line.y2, BLUE, 2);
     }
-    crew1.draw(width, height);
-    crew2.draw(width, height);
+    int scale = 2;
+    crew1.draw(width, height, scale);
+    crew2.draw(width, height, scale);
 
-    float scale_factor = 2.5*height/1080;
+    float scale_factor = scale*height/1080;
     // draw to screen
     al_set_target_bitmap(screen);
     al_clear_to_color(BLACK);
-    // al_draw_scaled_bitmap(fbo, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, 0, width/2, height, 0);
-    // al_draw_scaled_bitmap(fbo, crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, 0, width/2, height, 0);
-    al_draw_bitmap_region(fbo, crew1.getPosition()['x']-width/4, crew1.getPosition()['y']-height/2, width/2, height, 0, 0, 0);
-    al_draw_bitmap_region(fbo, crew2.getPosition()['x']-width/4, crew2.getPosition()['y']-height/2, width/2, height, width/2, 0, 0);
-    al_draw_filled_rectangle(width/2-5, 0, width/2+5, height, BLACK);
+    al_draw_scaled_bitmap(fbo, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
+    al_draw_scaled_bitmap(crew1.getShadow(), crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
+    al_draw_scaled_bitmap(fbo, crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
+    al_draw_scaled_bitmap(crew2.getShadow(), crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
+    // al_draw_bitmap_region(fbo, crew1.getPosition()['x']-width/4, crew1.getPosition()['y']-height/2, width/2, height, 0, 0, 0);
+    // al_draw_bitmap_region(fbo, crew2.getPosition()['x']-width/4, crew2.getPosition()['y']-height/2, width/2, height, width/2, 0, 0);
+    al_draw_filled_rectangle(width/2-5, height/2, width/2+5, 3*height/2, BLACK);
 
     al_flip_display();
 

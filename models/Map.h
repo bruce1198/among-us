@@ -32,6 +32,7 @@ public:
     Map(/* args */);
     ~Map();
     vector<Line> tiles;
+    void load_lines();
 };
 
 #endif

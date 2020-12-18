@@ -3,7 +3,7 @@
 #include <iostream>
 
 const int draw_frequency = 3;
-const Map game_map;
+Map game_map;
 
 Crew::Crew(int id) {
     this->id = id;
@@ -37,6 +37,7 @@ void Crew::load_images() {
         if(img)
             images.push_back(img);
     }
+    gun = al_load_bitmap("assets/images/gun.png");
 }
 
 map<char, int> Crew::getPosition() {
@@ -50,27 +51,123 @@ ostream& operator<<(ostream &os, Crew &hero) {
     return os;
 }
 
-void Crew::draw(int width, int height) {
+void Crew::draw(int width, int height, int scale) {
     int w, h;
     float scale_factor;
     if(this->direction==0 || this->direction==15 || this->direction==3 || this->direction==12) {
         w = al_get_bitmap_width(images[22]);
         h = al_get_bitmap_height(images[22]);
-        scale_factor = 0.38*0.4*height/1080;
+        scale_factor = 0.38*0.3*height/1080;
         al_draw_scaled_bitmap(images[22], 0, 0, w, h, pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, flag);
     }
     else {
         w = al_get_bitmap_width(images[sprite_pos]);
         h = al_get_bitmap_height(images[sprite_pos]);
-        scale_factor = 0.2*0.4*height/1080;
+        scale_factor = 0.2*0.3*height/1080;
         al_draw_scaled_bitmap(images[sprite_pos], 0, 0, w, h, pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, flag);
         al_draw_rectangle(pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, pos_x + w*scale_factor/2, pos_y + h*scale_factor/2, al_map_rgb(255, 0, 0), 2);
     }
+    // draw gun
+    scale_factor = 0.03*height/1080;
+    w = al_get_bitmap_width(gun);
+    h = al_get_bitmap_height(gun);
+    al_draw_scaled_bitmap(gun, 0, 0, w, h, pos_x - w*scale_factor/2 - 10, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, flag);
+
+
+    scale_factor = scale*height/1080;
+    float view_x1 = pos_x - width/(4*scale_factor)-1;
+    float view_x2 = pos_x + width/(4*scale_factor);
+    float view_y1 = pos_y - height/(2*scale_factor)-1;
+    float view_y2 = pos_y + height/(2*scale_factor);
+
+    buffer = al_get_target_bitmap();
+    if(!initBuffer) {
+        shadow_buffer = al_create_bitmap(al_get_bitmap_width(buffer), al_get_bitmap_height(buffer));
+        initBuffer = true;
+    }
+    // draw shadow to shadow_buffer
+    al_set_target_bitmap(shadow_buffer);
+    al_clear_to_color(al_map_rgba(0, 0, 0, 0));
+    al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_ZERO);
+    for(auto line: game_map.tiles) {
+        if(((view_x1<line.x1&&line.x1<view_x2) || (view_x1<line.x2&&line.x2<view_x2)) 
+            && ((view_y1<line.y1&&line.y1<view_y2) || (view_y1<line.y2&&line.y2<view_y2))) {
+            // wall in viewport
+            if(line.side==1 && pos_y>=line.y1) {
+                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                float point_y1 = view_y1;
+                float point_x1 = (point_y1-pos_y)/ratio1+pos_x;
+                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                float point_y2 = view_y1;
+                float point_x2 = (point_y2-pos_y)/ratio2+pos_x;
+                float vertices[] = {
+                    point_x1, point_y1,
+                    (float)line.x1, (float)line.y1,
+                    (float)line.x2, (float)line.y2,
+                    point_x2, point_y2
+                };
+                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+            }
+            else if(line.side==1 && pos_y<=line.y1) {
+                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                float point_y1 = view_y2;
+                float point_x1 = (point_y1-pos_y)/ratio1+pos_x;
+                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                float point_y2 = view_y2;
+                float point_x2 = (point_y2-pos_y)/ratio2+pos_x;
+                float vertices[] = {
+                    (float)line.x1, (float)line.y1,
+                    point_x1, point_y1,
+                    point_x2, point_y2,
+                    (float)line.x2, (float)line.y2,
+                };
+                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+            }
+            else if((line.side==2||line.side==3) && pos_x<=line.x1) {
+                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                float point_x1 = view_x2;
+                float point_y1 = (point_x1-pos_x)*ratio1+pos_y;
+                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                float point_x2 = view_x2;
+                float point_y2 = (point_x2-pos_x)*ratio2+pos_y;
+                float vertices[] = {
+                    (float)line.x1, (float)line.y1,
+                    (float)line.x2, (float)line.y2,
+                    point_x2, point_y2,
+                    point_x1, point_y1,
+                };
+                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+            }
+            else if((line.side==2||line.side==3) && pos_x>=line.x1) {
+                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                float point_x1 = view_x1;
+                float point_y1 = (point_x1-pos_x)*ratio1+pos_y;
+                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                float point_x2 = view_x1;
+                float point_y2 = (point_x2-pos_x)*ratio2+pos_y;
+                float vertices[] = {
+                    point_x1, point_y1,
+                    point_x2, point_y2,
+                    (float)line.x2, (float)line.y2,
+                    (float)line.x1, (float)line.y1,
+                };
+                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+                // al_draw_line(line.x1, line.y1, point_x1, point_y1, al_map_rgb(255, 0, 0), 2);
+                // al_draw_line(line.x2, line.y2, point_x2, point_y2, al_map_rgb(255, 0, 0), 2);
+            }
+        }
+    }
+    
+    al_set_target_bitmap(buffer);
+    al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_INVERSE_ALPHA);
+}
+ALLEGRO_BITMAP* Crew::getShadow() {
+    return this->shadow_buffer;
 }
 
 void Crew::update(int width, int height) {
     int w, h;
-    float scale_factor = 0.2*0.4*height/1080;
+    float scale_factor = 0.2*0.3*height/1080;
     w = al_get_bitmap_width(images[sprite_pos])*scale_factor;
     h = al_get_bitmap_height(images[sprite_pos])*scale_factor;
     counter++;
@@ -172,4 +269,8 @@ void Crew::remove_direction(int dir) {
 
 int Crew::get_direction() {
     return -1;
+}
+
+void Crew::reload() {
+    game_map.load_lines();
 }

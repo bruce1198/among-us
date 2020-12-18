@@ -14,6 +14,10 @@ enum {LEFT=0, RIGHT, UP, DOWN};
 class Crew {
 private:
     vector<ALLEGRO_BITMAP *> images;
+    ALLEGRO_BITMAP* gun;
+
+    ALLEGRO_BITMAP* shadow_buffer;
+    ALLEGRO_BITMAP* buffer;
     int id;
     int counter;
     int sprite_pos = 0;
@@ -25,13 +29,19 @@ private:
     float pos_y;
     int speed;
     string color;
+
+    int health;
+
+    bool initBuffer = false;
 public:
     Crew() {};
     Crew(int);
     ~Crew();
     map<char, int> getPosition();
     void update(int, int);
-    void draw(int, int);
+    void draw(int, int, int);
+    void reload();
+    ALLEGRO_BITMAP* getShadow();
     void set_direction(int);
     void remove_direction(int);
     int get_direction();
