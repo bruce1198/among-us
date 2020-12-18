@@ -1,0 +1,9 @@
+.vscode
+allegro/
+.DS_Store
+main.exe
+main
+DeleteMe.*
+bin/
+obj/
+*.dll

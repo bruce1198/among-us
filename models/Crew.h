@@ -30,7 +30,7 @@ public:
     Crew(int);
     ~Crew();
     map<char, int> getPosition();
-    void update();
+    void update(int, int);
     void draw(int, int);
     void set_direction(int);
     void remove_direction(int);

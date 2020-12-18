@@ -21,8 +21,9 @@ GameWindow::init()
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
     icon = al_load_bitmap("assets/images/icon.png");
     background = al_load_bitmap("assets/images/map.png");
-    
+
     screen = al_get_target_bitmap();
+    al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
     fbo = al_create_bitmap(al_get_bitmap_width(background), al_get_bitmap_height(background));
 
     al_set_display_icon(display, icon);
@@ -73,7 +74,7 @@ GameWindow::show_err_msg(int msg)
 {
     if(msg == GAME_TERMINATE)
         fprintf(stderr, "Game Terminated...\n");
-    else if(msg == GAME_EXIT) 
+    else if(msg == GAME_EXIT)
         fprintf(stderr, "Game Exit...\n");
     else
         fprintf(stderr, "unexpected msg: %d\n", msg);
@@ -94,7 +95,7 @@ GameWindow::GameWindow()
     width = info.x2 - info.x1;
     height = info.y2 - info.y1;
     // width = 1920;
-    height = 1080;
+    height = 768;
     // al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
     display = al_create_display(width, height);
     event_queue = al_create_event_queue();
@@ -157,8 +158,8 @@ GameWindow::update()
 {
     // models' status ex. moving
 
-    crew1.update();
-    crew2.update();
+    crew1.update(width, height);
+    crew2.update(width, height);
     return GAME_CONTINUE;
 }
 
@@ -234,6 +235,18 @@ GameWindow::process_event()
             case ALLEGRO_KEY_RIGHT:
                 crew1.set_direction(RIGHT);
                 break;
+            case ALLEGRO_KEY_W:
+                crew2.set_direction(UP);
+                break;
+            case ALLEGRO_KEY_S:
+                crew2.set_direction(DOWN);
+                break;
+            case ALLEGRO_KEY_A:
+                crew2.set_direction(LEFT);
+                break;
+            case ALLEGRO_KEY_D:
+                crew2.set_direction(RIGHT);
+                break;
             case ALLEGRO_KEY_P:
                 /*TODO: handle pause event here*/
                 break;
@@ -260,13 +273,23 @@ GameWindow::process_event()
             case ALLEGRO_KEY_RIGHT:
                 crew1.remove_direction(RIGHT);
                 break;
+            case ALLEGRO_KEY_W:
+                crew2.remove_direction(UP);
+                break;
+            case ALLEGRO_KEY_S:
+                crew2.remove_direction(DOWN);
+                break;
+            case ALLEGRO_KEY_A:
+                crew2.remove_direction(LEFT);
+                break;
+            case ALLEGRO_KEY_D:
+                crew2.remove_direction(RIGHT);
+                break;
         }
     }
     else if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_DOWN) {
         if(event.mouse.button == 1) {
-            // int x = event.mouse.x;
-            // int y = event.mouse.y;
-            // crew1.moveTo(x, y);
+
         }
         else if(event.mouse.button == 2) {
 
@@ -283,9 +306,9 @@ GameWindow::process_event()
         instruction = update();
 
         // Re-draw map
-        draw();
         redraw = false;
     }
+    draw();
 
     return instruction;
 }
@@ -294,33 +317,25 @@ void
 GameWindow::draw()
 {
     screen = al_get_target_bitmap();
+    // draw to fbo
+    
     al_set_target_bitmap(fbo);
     al_draw_bitmap(background, 0, 0, 0);
-    // ALLEGRO_TRANSFORM trans, prevTrans;
-    // al_copy_transform(&prevTrans, al_get_current_transform());
-    // al_identity_transform(&trans);
-    // float scale_factor = 2.5*height/1080;
-    // al_scale_transform(&trans, scale_factor, scale_factor); //1920, 1080 1992*2.5->1080 1992*x->1440
-    // al_use_transform(&trans);
-    // al_draw_bitmap_region(background, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/2, height, 0, 0, 0);
-    // al_draw_bitmap_region(background, crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/2, height, width/(2*scale_factor), 0, 0);
-    // al_use_transform(&prevTrans);
-    // al_draw_filled_rectangle(width/2-5, 0, width/2+5, height, al_map_rgb(0, 0, 0));
-    al_draw_filled_rectangle(0, 0, 500, 500, al_map_rgb(255, 0, 0));
+    for(auto line: gmap.tiles) {
+        al_draw_line(line.x1, line.y1, line.x2, line.y2, BLUE, 2);
+    }
     crew1.draw(width, height);
-    // crew2.draw(width, height);
-    al_set_target_bitmap(screen);
+    crew2.draw(width, height);
 
-    ALLEGRO_TRANSFORM trans, prevTrans;
-    al_copy_transform(&prevTrans, al_get_current_transform());
-    al_identity_transform(&trans);
     float scale_factor = 2.5*height/1080;
-    al_scale_transform(&trans, scale_factor, scale_factor); //1920, 1080 1992*2.5->1080 1992*x->1440
-    al_use_transform(&trans);
-    al_draw_bitmap(fbo, 0, 0, 0);
-    // al_draw_bitmap_region(fbo, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/2, height, 0, 0, 0);
-    al_use_transform(&prevTrans);
-
+    // draw to screen
+    al_set_target_bitmap(screen);
+    al_clear_to_color(BLACK);
+    al_draw_scaled_bitmap(fbo, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, 0, width/2, height, 0);
+    al_draw_scaled_bitmap(fbo, crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, 0, width/2, height, 0);
+    // al_draw_bitmap_region(fbo, crew1.getPosition()['x']-width/4, crew1.getPosition()['y']-height/2, width/2, height, 0, 0, 0);
+    // al_draw_bitmap_region(fbo, crew2.getPosition()['x']-width/4, crew2.getPosition()['y']-height/2, width/2, height, width/2, 0, 0);
+    al_draw_filled_rectangle(width/2-5, 0, width/2+5, height, BLACK);
 
     al_flip_display();
 

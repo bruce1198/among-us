@@ -80,6 +80,8 @@ private:
 
     Crew crew1;
     Crew crew2;
+    
+    Map gmap;
 
     int mouse_x, mouse_y;
 
