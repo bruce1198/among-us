@@ -73,6 +73,7 @@ private:
     ALLEGRO_EVENT event;
     ALLEGRO_TIMER *timer = NULL;
     ALLEGRO_TIMER *second_timer = NULL;
+    ALLEGRO_TIMER *food_timer = NULL;
 
     ALLEGRO_SAMPLE *sample = NULL;
     ALLEGRO_SAMPLE_INSTANCE *startSound = NULL;
@@ -85,7 +86,7 @@ private:
     
     Map gmap;
 
-    list<Food> foods;
+    list<Food*> foods;
 
     int mouse_x, mouse_y;
 

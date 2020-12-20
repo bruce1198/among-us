@@ -188,18 +188,23 @@ void Crew::eat(Food& food) {
 
 }
 
-void Crew::pickup(Food& food) {
+void Crew::pick(Food*& food) {
+    // pickup
     if(canPick) {
-        cout << "pick up" << endl;
         pickedup = food;
         canPick = false;
     }
 }
 
-void Crew::update(int width, int height) {
+void Crew::put() {
+    if(!canPick) {
+        pickedup->set_pos(pos_x, pos_y);
+        pickedup = NULL;
+        canPick = true;
+    }
+}
 
-    // update pickedup food position
-    pickedup.set_pos(pos_x, pos_y-50);
+void Crew::update(int width, int height) {
 
     // update crew status
     int w, h;
@@ -302,6 +307,10 @@ void Crew::update(int width, int height) {
             case 14: if(!stuck_right) pos_x += speed; break;
         }
     }
+
+    // update pickedup food position
+    if(pickedup)
+        pickedup->set_pos(pos_x, pos_y-30);
 }
 
 void Crew::set_direction(int dir) {

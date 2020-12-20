@@ -112,6 +112,8 @@ GameWindow::GameWindow()
 
     second_timer = al_create_timer(1.0);
 
+    food_timer = al_create_timer(10.0);
+
     if(second_timer == NULL)
         show_err_msg(-1);
 
@@ -141,6 +143,7 @@ GameWindow::GameWindow()
 
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
     al_register_event_source(event_queue, al_get_timer_event_source(second_timer));
+    al_register_event_source(event_queue, al_get_timer_event_source(food_timer));
 
     init();
 }
@@ -154,6 +157,7 @@ GameWindow::begin()
 
     al_start_timer(timer);
     al_start_timer(second_timer);
+    al_start_timer(food_timer);
 }
 
 int
@@ -186,7 +190,10 @@ GameWindow::reset()
     mute = false;
     redraw = false;
 
-    foods.push_back(Food());
+    for(int i=0; i<20; i++) {
+        Gredient g = (Gredient)(i%10);
+        foods.push_back(new Food(g));
+    }
 
     // stop sample instance
     al_stop_sample_instance(backgroundSound);
@@ -194,6 +201,8 @@ GameWindow::reset()
 
     // stop timer
     al_stop_timer(timer);
+    al_stop_timer(second_timer);
+    al_stop_timer(food_timer);
 }
 
 void
@@ -236,6 +245,12 @@ GameWindow::process_event()
             crew1.time_elapsed();
             crew2.time_elapsed();
         }
+        else if(event.timer.source == food_timer) {
+            if(foods.size()<20) {
+                Gredient g = (Gredient)(rand()%10);
+                foods.push_back(new Food(g));
+            }
+        }
         else {
 
         }
@@ -245,7 +260,7 @@ GameWindow::process_event()
     }
     else if(event.type == ALLEGRO_EVENT_KEY_DOWN) {
         int min_dist = 400;
-        Food& target = foods.front();
+        Food* target;
         int x = crew1.getPosition()['x'];
         int y = crew1.getPosition()['y'];
         switch(event.keyboard.keycode) {
@@ -274,15 +289,20 @@ GameWindow::process_event()
                 crew2.set_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_P:
-                for(auto& food: foods) {
-                    int dist = pow(food.get_x()-x, 2)+pow(food.get_y()-y, 2);
-                    if(dist<min_dist) {
-                        min_dist = dist;
-                        target = food;
+                if(crew1.ableToPick()) {
+                    for(auto& food: foods) {
+                        int dist = pow(food->get_x()-x, 2)+pow(food->get_y()-y, 2);
+                        if(dist<min_dist) {
+                            min_dist = dist;
+                            target = food;
+                        }
                     }
+                    if(min_dist!=400)
+                        crew1.pick(target);
                 }
-                if(min_dist!=400)
-                    crew1.pickup(target);
+                else {
+                    crew1.put();
+                }
                 break;
             case ALLEGRO_KEY_L:
                 gmap.load_lines();
@@ -365,7 +385,7 @@ GameWindow::draw()
     }
     float scale = 3;
     for(auto food: foods) {
-        food.draw(width, height, scale);
+        food->draw(width, height, scale);
     }
     crew1.draw(width, height, scale);
     crew2.draw(width, height, scale);

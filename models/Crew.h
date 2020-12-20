@@ -34,7 +34,7 @@ private:
     int waterness;
     int poisoness;
 
-    Food pickedup;
+    Food* pickedup = NULL;
     bool canPick;
 
     int health;
@@ -54,7 +54,9 @@ public:
     int get_direction();
     void load_images();
     void eat(Food&);
-    void pickup(Food&);
+    void pick(Food*&);
+    void put();
+    bool ableToPick() {return canPick; }
     friend ostream& operator<<(ostream &os, Crew &hero);
     void time_elapsed();
     int get_energy();

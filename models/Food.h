@@ -2,6 +2,9 @@
 #define _FOOD_H_
 
 #include <allegro5/allegro_primitives.h>
+#include <time.h>
+
+enum Gredient { LOBSTER=0, LU, EGG, RICE, TSON, MEAT, BROCO, CARROT, MUSH, RIVER, WATER, FRIED, LOBSTERCOOKED, STEAK};
 
 class Food {
 private:
@@ -12,11 +15,14 @@ private:
     int poison;
     bool cooked;
     int timeToCook;
+    int type;
+
+    ALLEGRO_COLOR color;
 
     int pos_x;
     int pos_y;
 public:
-    Food();
+    Food(Gredient);
     ~Food();
     void draw(int, int, int);
     void set_pos(int, int);

@@ -1,0 +1,6 @@
+crew1:
+    up=>
+    down=>
+    left=>
+    right=>
+    p=>pickup/putdown
