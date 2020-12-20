@@ -14,18 +14,36 @@ Crew::Crew(int id) {
     }
     else if(id==1) {
         pos_x = 2040;
-        pos_y = 596;
+        pos_y = 616;
         color = "red";
     }
     speed = 3;
     counter = 0;
     direction = 0;
     for(int i=0; i<4; i++) direction_ary[i] = false;
+
+    fullness = 100;
+    waterness = 100;
+    poisoness = 0;
+    canPick = true;
+    
     load_images();
 }
 
 Crew::~Crew() {
 
+}
+
+int Crew::get_energy() {
+    return fullness;
+}
+
+int Crew::get_water() {
+    return waterness;
+}
+
+int Crew::get_poison() {
+    return poisoness;
 }
 
 void Crew::load_images() {
@@ -37,7 +55,6 @@ void Crew::load_images() {
         if(img)
             images.push_back(img);
     }
-    gun = al_load_bitmap("assets/images/gun.png");
 }
 
 map<char, int> Crew::getPosition() {
@@ -67,11 +84,6 @@ void Crew::draw(int width, int height, int scale) {
         al_draw_scaled_bitmap(images[sprite_pos], 0, 0, w, h, pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, flag);
         al_draw_rectangle(pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, pos_x + w*scale_factor/2, pos_y + h*scale_factor/2, al_map_rgb(255, 0, 0), 2);
     }
-    // draw gun
-    scale_factor = 0.03*height/1080;
-    w = al_get_bitmap_width(gun);
-    h = al_get_bitmap_height(gun);
-    al_draw_scaled_bitmap(gun, 0, 0, w, h, pos_x - w*scale_factor/2 - 10, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, flag);
 
 
     scale_factor = scale*height/1080;
@@ -90,70 +102,72 @@ void Crew::draw(int width, int height, int scale) {
     al_clear_to_color(al_map_rgba(0, 0, 0, 0));
     al_set_blender(ALLEGRO_ADD, ALLEGRO_ONE, ALLEGRO_ZERO);
     for(auto line: game_map.tiles) {
-        if(((view_x1<line.x1&&line.x1<view_x2) || (view_x1<line.x2&&line.x2<view_x2)) 
-            && ((view_y1<line.y1&&line.y1<view_y2) || (view_y1<line.y2&&line.y2<view_y2))) {
-            // wall in viewport
-            if(line.side==1 && pos_y>=line.y1) {
-                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
-                float point_y1 = view_y1;
-                float point_x1 = (point_y1-pos_y)/ratio1+pos_x;
-                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
-                float point_y2 = view_y1;
-                float point_x2 = (point_y2-pos_y)/ratio2+pos_x;
-                float vertices[] = {
-                    point_x1, point_y1,
-                    (float)line.x1, (float)line.y1,
-                    (float)line.x2, (float)line.y2,
-                    point_x2, point_y2
-                };
-                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
-            }
-            else if(line.side==1 && pos_y<=line.y1) {
-                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
-                float point_y1 = view_y2;
-                float point_x1 = (point_y1-pos_y)/ratio1+pos_x;
-                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
-                float point_y2 = view_y2;
-                float point_x2 = (point_y2-pos_y)/ratio2+pos_x;
-                float vertices[] = {
-                    (float)line.x1, (float)line.y1,
-                    point_x1, point_y1,
-                    point_x2, point_y2,
-                    (float)line.x2, (float)line.y2,
-                };
-                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
-            }
-            else if((line.side==2||line.side==3) && pos_x<=line.x1) {
-                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
-                float point_x1 = view_x2;
-                float point_y1 = (point_x1-pos_x)*ratio1+pos_y;
-                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
-                float point_x2 = view_x2;
-                float point_y2 = (point_x2-pos_x)*ratio2+pos_y;
-                float vertices[] = {
-                    (float)line.x1, (float)line.y1,
-                    (float)line.x2, (float)line.y2,
-                    point_x2, point_y2,
-                    point_x1, point_y1,
-                };
-                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
-            }
-            else if((line.side==2||line.side==3) && pos_x>=line.x1) {
-                float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
-                float point_x1 = view_x1;
-                float point_y1 = (point_x1-pos_x)*ratio1+pos_y;
-                float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
-                float point_x2 = view_x1;
-                float point_y2 = (point_x2-pos_x)*ratio2+pos_y;
-                float vertices[] = {
-                    point_x1, point_y1,
-                    point_x2, point_y2,
-                    (float)line.x2, (float)line.y2,
-                    (float)line.x1, (float)line.y1,
-                };
-                al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
-                // al_draw_line(line.x1, line.y1, point_x1, point_y1, al_map_rgb(255, 0, 0), 2);
-                // al_draw_line(line.x2, line.y2, point_x2, point_y2, al_map_rgb(255, 0, 0), 2);
+        if(!line.transparent) {
+            if(((view_x1<line.x1&&line.x1<view_x2) || (view_x1<line.x2&&line.x2<view_x2)) 
+                && ((view_y1<line.y1&&line.y1<view_y2) || (view_y1<line.y2&&line.y2<view_y2))) {
+                // wall in viewport
+                if((line.side==1||line.side==0) && pos_y>=line.y1) {
+                    float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                    float point_y1 = view_y1;
+                    float point_x1 = (point_y1-pos_y)/ratio1+pos_x;
+                    float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                    float point_y2 = view_y1;
+                    float point_x2 = (point_y2-pos_y)/ratio2+pos_x;
+                    float vertices[] = {
+                        point_x1, point_y1,
+                        (float)line.x1, (float)line.y1,
+                        (float)line.x2, (float)line.y2,
+                        point_x2, point_y2
+                    };
+                    al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+                }
+                else if((line.side==1||line.side==0) && pos_y<=line.y1) {
+                    float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                    float point_y1 = view_y2;
+                    float point_x1 = (point_y1-pos_y)/ratio1+pos_x;
+                    float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                    float point_y2 = view_y2;
+                    float point_x2 = (point_y2-pos_y)/ratio2+pos_x;
+                    float vertices[] = {
+                        (float)line.x1, (float)line.y1,
+                        point_x1, point_y1,
+                        point_x2, point_y2,
+                        (float)line.x2, (float)line.y2,
+                    };
+                    al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+                }
+                else if((line.side==2||line.side==3) && pos_x<=line.x1) {
+                    float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                    float point_x1 = view_x2;
+                    float point_y1 = (point_x1-pos_x)*ratio1+pos_y;
+                    float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                    float point_x2 = view_x2;
+                    float point_y2 = (point_x2-pos_x)*ratio2+pos_y;
+                    float vertices[] = {
+                        (float)line.x1, (float)line.y1,
+                        (float)line.x2, (float)line.y2,
+                        point_x2, point_y2,
+                        point_x1, point_y1,
+                    };
+                    al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+                }
+                else if((line.side==2||line.side==3) && pos_x>=line.x1) {
+                    float ratio1 = (line.y1-pos_y)/(line.x1-pos_x);
+                    float point_x1 = view_x1;
+                    float point_y1 = (point_x1-pos_x)*ratio1+pos_y;
+                    float ratio2 = (line.y2-pos_y)/(line.x2-pos_x);
+                    float point_x2 = view_x1;
+                    float point_y2 = (point_x2-pos_x)*ratio2+pos_y;
+                    float vertices[] = {
+                        point_x1, point_y1,
+                        point_x2, point_y2,
+                        (float)line.x2, (float)line.y2,
+                        (float)line.x1, (float)line.y1,
+                    };
+                    al_draw_filled_polygon(vertices, 4, al_map_rgba(0, 0, 0, 200));
+                    // al_draw_line(line.x1, line.y1, point_x1, point_y1, al_map_rgb(255, 0, 0), 2);
+                    // al_draw_line(line.x2, line.y2, point_x2, point_y2, al_map_rgb(255, 0, 0), 2);
+                }
             }
         }
     }
@@ -165,7 +179,29 @@ ALLEGRO_BITMAP* Crew::getShadow() {
     return this->shadow_buffer;
 }
 
+void Crew::time_elapsed() {
+    fullness--;
+    waterness--;
+}
+
+void Crew::eat(Food& food) {
+
+}
+
+void Crew::pickup(Food& food) {
+    if(canPick) {
+        cout << "pick up" << endl;
+        pickedup = food;
+        canPick = false;
+    }
+}
+
 void Crew::update(int width, int height) {
+
+    // update pickedup food position
+    pickedup.set_pos(pos_x, pos_y-50);
+
+    // update crew status
     int w, h;
     float scale_factor = 0.2*0.3*height/1080;
     w = al_get_bitmap_width(images[sprite_pos])*scale_factor;
@@ -193,9 +229,9 @@ void Crew::update(int width, int height) {
         int stuck_right = false;
         for(auto line: game_map.tiles) {
             if(line.side==0) {// face down
-                if(pos_y-h/2 >= line.y1-speed && pos_y-h/2<=line.y1 && pos_x+w/2>line.x1 && pos_x-w/2<line.x2
+                if(pos_y+h/2-10 >= line.y1-speed && pos_y+h/2-10<=line.y1 && pos_x+w/2>line.x1 && pos_x-w/2<line.x2
                     && (this->direction==4 || this->direction==5 || this->direction==6 || this->direction==7)) {
-                    pos_y = line.y1+h/2;
+                    pos_y = line.y1-h/2+10;
                     stuck_up = true;
                 }
             }
@@ -207,17 +243,35 @@ void Crew::update(int width, int height) {
                 }
             }
             if(line.side==2) {// face left
-                if(pos_x+w/2 <= line.x1+speed && pos_x+w/2>=line.x1 && pos_y+h/2>line.y1 && pos_y-h/2<line.y2
-                    && (this->direction==2 || this->direction==6 || this->direction==10 || this->direction==14)) {
-                    pos_x = line.x1-w/2;
-                    stuck_right = true;
+                if(line.outside) {
+                    if(pos_x+w/2 <= line.x1+speed && pos_x+w/2>=line.x1 && pos_y+h/2>line.y1 && pos_y+h/2-10<line.y2
+                        && (this->direction==2 || this->direction==6 || this->direction==10 || this->direction==14)) {
+                        pos_x = line.x1-w/2;
+                        stuck_right = true;
+                    }
+                }
+                else {
+                    if(pos_x+w/2 <= line.x1+speed && pos_x+w/2>=line.x1 && pos_y+h/2>line.y1 && pos_y-h/2<line.y2
+                        && (this->direction==2 || this->direction==6 || this->direction==10 || this->direction==14)) {
+                        pos_x = line.x1-w/2;
+                        stuck_right = true;
+                    }
                 }
             }
             if(line.side==3) {// face right
-                if(pos_x-w/2 >= line.x1-speed && pos_x-w/2<=line.x1 && pos_y+h/2>line.y1 && pos_y-h/2<line.y2
-                    && (this->direction==1 || this->direction==5 || this->direction==9 || this->direction==13)) {
-                    pos_x = line.x1+w/2;
-                    stuck_left = true;
+                if(line.outside) {
+                    if(pos_x-w/2 >= line.x1-speed && pos_x-w/2<=line.x1 && pos_y+h/2>line.y1 && pos_y+h/2-10<line.y2
+                        && (this->direction==1 || this->direction==5 || this->direction==9 || this->direction==13)) {
+                        pos_x = line.x1+w/2;
+                        stuck_left = true;
+                    }
+                }
+                else {
+                    if(pos_x-w/2 >= line.x1-speed && pos_x-w/2<=line.x1 && pos_y+h/2>line.y1 && pos_y-h/2<line.y2
+                        && (this->direction==1 || this->direction==5 || this->direction==9 || this->direction==13)) {
+                        pos_x = line.x1+w/2;
+                        stuck_left = true;
+                    }
                 }
             }
         }

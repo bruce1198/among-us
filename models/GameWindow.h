@@ -8,6 +8,7 @@
 #include <allegro5/allegro_acodec.h>
 #include <vector>
 #include <list>
+#include "Food.h"
 #include <time.h>
 #include "Crew.h"
 
@@ -71,6 +72,7 @@ private:
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
     ALLEGRO_EVENT event;
     ALLEGRO_TIMER *timer = NULL;
+    ALLEGRO_TIMER *second_timer = NULL;
 
     ALLEGRO_SAMPLE *sample = NULL;
     ALLEGRO_SAMPLE_INSTANCE *startSound = NULL;
@@ -82,6 +84,8 @@ private:
     Crew crew2;
     
     Map gmap;
+
+    list<Food> foods;
 
     int mouse_x, mouse_y;
 

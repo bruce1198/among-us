@@ -9,10 +9,10 @@ Map::Map() {
 
 void Map::load_lines() {
     fstream config("config/map.txt", ios_base::in);
-    int x1, y1, x2, y2, side, transparent;
+    int x1, y1, x2, y2, side, transparent, outside;
     tiles.clear();
-    while(config >> x1 >> y1 >> x2 >> y2 >> side >> transparent) {
-        tiles.push_back(Line(x1, y1, x2, y2, side, 0));
+    while(config >> x1 >> y1 >> x2 >> y2 >> side >> transparent >> outside) {
+        tiles.push_back(Line(x1, y1, x2, y2, side, transparent, outside));
     }
 }
 

@@ -4,9 +4,10 @@
 #include "Map.h"
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
+#include <list>
 #include <map>
-#include <vector>
 #include <string>
+#include "Food.h"
 
 using namespace std;
 enum {LEFT=0, RIGHT, UP, DOWN};
@@ -14,7 +15,6 @@ enum {LEFT=0, RIGHT, UP, DOWN};
 class Crew {
 private:
     vector<ALLEGRO_BITMAP *> images;
-    ALLEGRO_BITMAP* gun;
 
     ALLEGRO_BITMAP* shadow_buffer;
     ALLEGRO_BITMAP* buffer;
@@ -29,6 +29,13 @@ private:
     float pos_y;
     int speed;
     string color;
+
+    int fullness;
+    int waterness;
+    int poisoness;
+
+    Food pickedup;
+    bool canPick;
 
     int health;
 
@@ -46,7 +53,13 @@ public:
     void remove_direction(int);
     int get_direction();
     void load_images();
+    void eat(Food&);
+    void pickup(Food&);
     friend ostream& operator<<(ostream &os, Crew &hero);
+    void time_elapsed();
+    int get_energy();
+    int get_water();
+    int get_poison();
 };
 
 #endif

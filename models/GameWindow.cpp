@@ -3,10 +3,18 @@
 
 #define WHITE al_map_rgb(255, 255, 255)
 #define BLACK al_map_rgb(0, 0, 0)
+#define BACKGROUND al_map_rgb(204, 229, 255)
+#define GRAY al_map_rgb(50, 50, 50)
 #define ORANGE_LIGHT al_map_rgb(255, 196, 87)
 #define ORANGE_DARK al_map_rgb(255, 142, 71)
 #define PURPLE al_map_rgb(149, 128, 255)
 #define BLUE al_map_rgb(77, 129, 179)
+#define ENERGY_BK al_map_rgb(255, 204, 204)
+#define ENERGY al_map_rgb(255, 0, 0)
+#define WATER_BK al_map_rgb(153, 204, 255)
+#define WATER al_map_rgb(0, 0, 255)
+#define POISON_BK al_map_rgb(204, 153, 255)
+#define POISON al_map_rgb(127, 0, 255)
 
 #define min(a, b) ((a) < (b)? (a) : (b))
 #define max(a, b) ((a) > (b)? (a) : (b))
@@ -102,6 +110,11 @@ GameWindow::GameWindow()
 
     timer = al_create_timer(1.0 / FPS);
 
+    second_timer = al_create_timer(1.0);
+
+    if(second_timer == NULL)
+        show_err_msg(-1);
+
     if(timer == NULL)
         show_err_msg(-1);
 
@@ -118,15 +131,16 @@ GameWindow::GameWindow()
     al_install_mouse();    // install mouse event
     al_install_audio();    // install audio event
 
-    font = al_load_ttf_font("../assets/fonts/Caviar_Dreams_Bold.ttf",12,0); // load small font
-    Medium_font = al_load_ttf_font("../assets/fonts/Caviar_Dreams_Bold.ttf",24,0); //load medium font
-    Large_font = al_load_ttf_font("../assets/fonts/Caviar_Dreams_Bold.ttf",36,0); //load large font
+    font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",12,0); // load small font
+    Medium_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",24,0); //load medium font
+    Large_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",36,0); //load large font
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
     al_register_event_source(event_queue, al_get_mouse_event_source());
 
     al_register_event_source(event_queue, al_get_timer_event_source(timer));
+    al_register_event_source(event_queue, al_get_timer_event_source(second_timer));
 
     init();
 }
@@ -139,6 +153,7 @@ GameWindow::begin()
     // al_play_sample_instance(backgroundSound);
 
     al_start_timer(timer);
+    al_start_timer(second_timer);
 }
 
 int
@@ -171,6 +186,8 @@ GameWindow::reset()
     mute = false;
     redraw = false;
 
+    foods.push_back(Food());
+
     // stop sample instance
     al_stop_sample_instance(backgroundSound);
     al_stop_sample_instance(startSound);
@@ -191,6 +208,7 @@ GameWindow::destroy()
     al_destroy_font(Large_font);
 
     al_destroy_timer(timer);
+    al_destroy_timer(second_timer);
 
     al_destroy_bitmap(icon);
     al_destroy_bitmap(background);
@@ -214,6 +232,10 @@ GameWindow::process_event()
         if(event.timer.source == timer) {
             redraw = true;
         }
+        else if(event.timer.source == second_timer) {
+            crew1.time_elapsed();
+            crew2.time_elapsed();
+        }
         else {
 
         }
@@ -222,6 +244,10 @@ GameWindow::process_event()
         return GAME_EXIT;
     }
     else if(event.type == ALLEGRO_EVENT_KEY_DOWN) {
+        int min_dist = 400;
+        Food& target = foods.front();
+        int x = crew1.getPosition()['x'];
+        int y = crew1.getPosition()['y'];
         switch(event.keyboard.keycode) {
             case ALLEGRO_KEY_UP:
                 crew1.set_direction(UP);
@@ -248,7 +274,15 @@ GameWindow::process_event()
                 crew2.set_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_P:
-                /*TODO: handle pause event here*/
+                for(auto& food: foods) {
+                    int dist = pow(food.get_x()-x, 2)+pow(food.get_y()-y, 2);
+                    if(dist<min_dist) {
+                        min_dist = dist;
+                        target = food;
+                    }
+                }
+                if(min_dist!=400)
+                    crew1.pickup(target);
                 break;
             case ALLEGRO_KEY_L:
                 gmap.load_lines();
@@ -329,21 +363,36 @@ GameWindow::draw()
     for(auto line: gmap.tiles) {
         al_draw_line(line.x1, line.y1, line.x2, line.y2, BLUE, 2);
     }
-    int scale = 2;
+    float scale = 3;
+    for(auto food: foods) {
+        food.draw(width, height, scale);
+    }
     crew1.draw(width, height, scale);
     crew2.draw(width, height, scale);
 
     float scale_factor = scale*height/1080;
     // draw to screen
     al_set_target_bitmap(screen);
-    al_clear_to_color(BLACK);
+    al_clear_to_color(BACKGROUND);
+    /*===============================crew1's view=====================================*/
+    // draw crew1 and shadow
     al_draw_scaled_bitmap(fbo, crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
     al_draw_scaled_bitmap(crew1.getShadow(), crew1.getPosition()['x']-width/(4*scale_factor), crew1.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
+    // draw status
+    al_draw_text(Large_font, BLACK, width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
+    al_draw_text(Large_font, BLACK, width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
+    al_draw_text(Large_font, BLACK, width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
+    al_draw_filled_rectangle(width/8, 3*height/2+50, width/8+width/3, 3*height/2+100, ENERGY_BK);
+    al_draw_filled_rectangle(width/8, 3*height/2+50, width/8+crew1.get_energy()*width/300, 3*height/2+100, ENERGY);
+    al_draw_filled_rectangle(width/8, 3*height/2+120, width/8+width/3, 3*height/2+170, WATER_BK);
+    al_draw_filled_rectangle(width/8, 3*height/2+120, width/8+crew1.get_water()*width/300, 3*height/2+170, WATER);
+    // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
+    al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+crew1.get_poison()*width/300, 3*height/2+240, POISON);
+    /*===============================crew2's view=====================================*/
     al_draw_scaled_bitmap(fbo, crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
     al_draw_scaled_bitmap(crew2.getShadow(), crew2.getPosition()['x']-width/(4*scale_factor), crew2.getPosition()['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
-    // al_draw_bitmap_region(fbo, crew1.getPosition()['x']-width/4, crew1.getPosition()['y']-height/2, width/2, height, 0, 0, 0);
-    // al_draw_bitmap_region(fbo, crew2.getPosition()['x']-width/4, crew2.getPosition()['y']-height/2, width/2, height, width/2, 0, 0);
-    al_draw_filled_rectangle(width/2-5, height/2, width/2+5, 3*height/2, BLACK);
+    // draw split line
+    al_draw_filled_rectangle(width/2-5, 0, width/2+5, 2*height, BLACK);
 
     al_flip_display();
 
