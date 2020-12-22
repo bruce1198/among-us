@@ -3,31 +3,35 @@
 
 #include <allegro5/allegro_primitives.h>
 #include <time.h>
+#include "Object.h"
 
 enum Gredient { LOBSTER=0, LU, EGG, RICE, TSON, MEAT, BROCO, CARROT, MUSH, RIVER, WATER, FRIED, LOBSTERCOOKED, STEAK};
 
-class Food {
+class Food: public Object {
 private:
-    ALLEGRO_BITMAP* uncooked_image;
-    ALLEGRO_BITMAP* cooked_image;
+    ALLEGRO_BITMAP* image;
+    int fid;
     int ounce;
     int water;
     int poison;
     bool cooked;
     int timeToCook;
     int type;
+    bool inPot;
 
     ALLEGRO_COLOR color;
-
-    int pos_x;
-    int pos_y;
 public:
-    Food(Gredient);
+    Food(Gredient, int);
     ~Food();
     void draw(int, int, int);
-    void set_pos(int, int);
-    int get_x() { return pos_x; };
-    int get_y() { return pos_y; };
+    void drawOnScreen(int, int);
+    int get_food_type() { return type; };
+    int get_id() { return fid; };
+    int get_ounce() { return ounce; };
+    int get_water() { return water; };
+    int get_poison() { return poison; };
+    bool is_in_pot() { return inPot; };
+    void put_in_pot() { inPot = true; };
 };
 
 #endif

@@ -6,6 +6,7 @@ const int draw_frequency = 3;
 Map game_map;
 
 Crew::Crew(int id) {
+    obj_type = CREW;
     this->id = id;
     if(id==0) {
         pos_x = 1440;
@@ -34,15 +35,15 @@ Crew::~Crew() {
 
 }
 
-int Crew::get_energy() {
+float Crew::get_energy() {
     return fullness;
 }
 
-int Crew::get_water() {
+float Crew::get_water() {
     return waterness;
 }
 
-int Crew::get_poison() {
+float Crew::get_poison() {
     return poisoness;
 }
 
@@ -180,15 +181,24 @@ ALLEGRO_BITMAP* Crew::getShadow() {
 }
 
 void Crew::time_elapsed() {
-    fullness--;
-    waterness--;
+    fullness -= 1;
+    if(fullness<=0) fullness=0;
+    waterness -= 1.5;
+    if(waterness<=0) waterness=0;
 }
 
-void Crew::eat(Food& food) {
-
+int Crew::eat() {
+    if(pickedup->get_type()==FOOD) {
+        Food* tmp = (Food*)pickedup;
+        fullness += tmp->get_ounce();
+        waterness += tmp->get_water();
+        poisoness += tmp->get_poison();
+        return tmp->get_id();
+    }
+    return -1;
 }
 
-void Crew::pick(Food*& food) {
+void Crew::pick(Object*& food) {
     // pickup
     if(canPick) {
         pickedup = food;
@@ -196,12 +206,15 @@ void Crew::pick(Food*& food) {
     }
 }
 
-void Crew::put() {
+Object* Crew::put() {
     if(!canPick) {
         pickedup->set_pos(pos_x, pos_y);
+        Object* tmp = pickedup;
         pickedup = NULL;
         canPick = true;
+        return tmp;
     }
+    return nullptr;
 }
 
 void Crew::update(int width, int height) {

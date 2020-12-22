@@ -9,8 +9,12 @@
 #include <vector>
 #include <list>
 #include "Food.h"
+#include "Pot.h"
 #include <time.h>
 #include "Crew.h"
+#include <fstream>
+#include "Fire.h"
+#include <map>
 
 #define GAME_INIT -1
 #define GAME_SETTING 0
@@ -58,6 +62,7 @@ private:
 
     int width;
     int height;
+    int fbo_scale = 2;
 
     ALLEGRO_BITMAP *icon;
     ALLEGRO_BITMAP *background = NULL;
@@ -85,8 +90,11 @@ private:
     Crew crew2;
     
     Map gmap;
+    vector<Fire> fires;
 
+    int food_pk = 0;
     list<Food*> foods;
+    list<Pot*> pots;
 
     int mouse_x, mouse_y;
 

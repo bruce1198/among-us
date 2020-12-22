@@ -7,12 +7,13 @@
 #include <list>
 #include <map>
 #include <string>
+#include "Object.h"
 #include "Food.h"
 
 using namespace std;
 enum {LEFT=0, RIGHT, UP, DOWN};
 
-class Crew {
+class Crew: public Object {
 private:
     vector<ALLEGRO_BITMAP *> images;
 
@@ -25,16 +26,14 @@ private:
     bool direction_ary[4];
     int direction = 1;
     int flag = 1;
-    float pos_x;
-    float pos_y;
     int speed;
     string color;
 
-    int fullness;
-    int waterness;
-    int poisoness;
+    float fullness;
+    float waterness;
+    float poisoness;
 
-    Food* pickedup = NULL;
+    Object* pickedup = NULL;
     bool canPick;
 
     int health;
@@ -53,15 +52,15 @@ public:
     void remove_direction(int);
     int get_direction();
     void load_images();
-    void eat(Food&);
-    void pick(Food*&);
-    void put();
+    int eat();
+    void pick(Object*&);
+    Object* put();
     bool ableToPick() {return canPick; }
     friend ostream& operator<<(ostream &os, Crew &hero);
     void time_elapsed();
-    int get_energy();
-    int get_water();
-    int get_poison();
+    float get_energy();
+    float get_water();
+    float get_poison();
 };
 
 #endif
