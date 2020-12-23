@@ -5,18 +5,16 @@
 const int draw_frequency = 3;
 Map game_map;
 
-Crew::Crew(int id) {
+Crew::Crew(int id, Color color) {
     obj_type = CREW;
-    this->id = id;
+    this->color = color;
     if(id==0) {
         pos_x = 1440;
         pos_y = 986;
-        color = "black";
     }
     else if(id==1) {
         pos_x = 2040;
         pos_y = 616;
-        color = "red";
     }
     speed = 3;
     counter = 0;
@@ -48,11 +46,55 @@ float Crew::get_poison() {
 }
 
 void Crew::load_images() {
-    string buf;
+    string buf = "assets/images/";
+    switch (color) {
+    case BLACK:
+        buf += "black";
+        break;
+    case BLUE:
+        buf += "blue";
+        break;
+    case BROWN:
+        buf += "brown";
+        break;
+    case CYAN:
+        buf += "cyan";
+        break;
+    case FORTEGREEN:
+        buf += "fortegreen";
+        break;
+    case GREEN:
+        buf += "green";
+        break;
+    case LIME:
+        buf += "lime";
+        break;
+    case ORANGE:
+        buf += "orange";
+        break;
+    case PINK:
+        buf += "pink";
+        break;
+    case PURPLE:
+        buf += "purple";
+        break;
+    case RED:
+        buf += "red";
+        break;
+    case TAN:
+        buf += "tan";
+        break;
+    case WHITE:
+        buf += "white";
+        break;
+    case YELLOW:
+        buf += "yello";
+        break;
+    }
     for(int i=1; i<=23; i++) {
-        buf = "assets/images/"+color+"/"+to_string(i)+".png";
+        string path = buf + "/"+to_string(i)+".png";
         ALLEGRO_BITMAP *img;
-        img = al_load_bitmap(buf.c_str());
+        img = al_load_bitmap(path.c_str());
         if(img)
             images.push_back(img);
     }
@@ -188,12 +230,14 @@ void Crew::time_elapsed() {
 }
 
 int Crew::eat() {
-    if(pickedup->get_type()==FOOD) {
-        Food* tmp = (Food*)pickedup;
-        fullness += tmp->get_ounce();
-        waterness += tmp->get_water();
-        poisoness += tmp->get_poison();
-        return tmp->get_id();
+    if(pickedup!=NULL) {
+        if(pickedup->get_type()==FOOD) {
+            Food* tmp = (Food*)pickedup;
+            fullness += tmp->get_ounce();
+            waterness += tmp->get_water();
+            poisoness += tmp->get_poison();
+            return tmp->get_id();
+        }
     }
     return -1;
 }

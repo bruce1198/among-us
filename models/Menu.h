@@ -1,3 +1,5 @@
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_acodec.h>
 
 class Menu {
 private:
@@ -7,7 +9,8 @@ private:
 public:
     Menu(/* args */);
     ~Menu();
-    void draw();
+    void draw(int, int);
     void hide();
     void show();
+    void toggle();
 };

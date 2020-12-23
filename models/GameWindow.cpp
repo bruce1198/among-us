@@ -145,6 +145,7 @@ GameWindow::GameWindow()
     al_register_event_source(event_queue, al_get_timer_event_source(second_timer));
     al_register_event_source(event_queue, al_get_timer_event_source(food_timer));
 
+    status = WELCOME;
     init();
 }
 
@@ -184,6 +185,8 @@ GameWindow::update()
         for(auto food: shouldRemove) {
             int fid = food->get_id();
             if(fid==-1) { //new food
+                food->set_id(food_pk);
+                food_pk++;
                 foods.push_back(food);
             }
             else { //old food
@@ -204,8 +207,11 @@ GameWindow::update()
 void
 GameWindow::reset()
 {
-    crew1 = Crew(0);
-    crew2 = Crew(1);
+    int c1 = rand()%14;
+    int c2;
+    while((c2=rand()%14)==c1) ;
+    crew1 = Crew(0, (Color)c1);
+    crew2 = Crew(1, (Color)c2);
     mute = false;
     redraw = false;
 
@@ -300,6 +306,11 @@ GameWindow::process_event()
         float x2 = crew2['x'];
         float y2 = crew2['y'];
         switch(event.keyboard.keycode) {
+            case ALLEGRO_KEY_ESCAPE:
+                menu.toggle();
+                break;
+            case ALLEGRO_KEY_Q:
+                return GAME_EXIT;
             case ALLEGRO_KEY_UP:
                 crew1.set_direction(UP);
                 break;
@@ -327,29 +338,69 @@ GameWindow::process_event()
             case ALLEGRO_KEY_R:
                 if(crew2.ableToPick()) {
                     for(auto& food: foods) {
-                        int dist = pow(food->get_x()-x2, 2)+pow(food->get_y()-y2, 2);
-                        if(dist<min_dist) {
+                        int dist = pow(food->get_x()-crew2['x'], 2)+pow(food->get_y()-crew2['y'], 2);
+                        if(dist<min_dist && !food->is_in_pot()) {
                             min_dist = dist;
                             target = food;
                         }
                     }
                     for(auto& pot: pots) {
-                        int dist = pow(pot->get_x()-x2, 2)+pow(pot->get_y()-y2, 2);
+                        int dist = pow(pot->get_x()-crew2['x'], 2)+pow(pot->get_y()-crew2['y'], 2);
                         if(dist<min_dist) {
                             min_dist = dist;
                             target = pot;
                         }
                     }
-                    if(min_dist!=400)
+                    if(min_dist!=400) {
+                        if(target->get_type()==POT) {
+                            ((Pot*)target)->set_ready(false);
+                        }
                         crew2.pick(target);
+                    }
                 }
                 else {
                     Object* obj = crew2.put();
+                    if(obj) {
+                        if(obj->get_type()==FOOD) {
+                            Pot* target_pot;
+                            float pot_min_dist = 400;
+                            for(auto& pot: pots) {
+                                int dist = pow(pot->get_x()-obj->get_x(), 2)+pow(pot->get_y()-obj->get_y(), 2);
+                                if(dist<pot_min_dist) {
+                                    pot_min_dist = dist;
+                                    target_pot = pot;
+                                }
+                            }
+                            if(pot_min_dist!=400) {
+                                target_pot->insert((Food*&)obj);
+                            }
+                        }
+                        if(obj->get_type()==POT) {
+                            Fire target_fire;
+                            float fire_min_dist = 400;
+                            for(auto fire: fires) {
+                                int dist = pow(fire.get_x()-obj->get_x(), 2)+pow(fire.get_y()-obj->get_y(), 2);
+                                if(dist<fire_min_dist) {
+                                    fire_min_dist = dist;
+                                    target_fire = fire;
+                                }
+                            }
+                            if(fire_min_dist!=400) {
+                                Pot*& tmp = (Pot*&)obj;
+                                tmp->set_pos(target_fire.get_x(), target_fire.get_y()-20);
+                                tmp->set_ready(true);
+                            }
+                            else {
+                                Pot*& tmp = (Pot*&)obj;
+                                tmp->set_ready(false);
+                            }
+                        }
+                    }
                 }
                 break;
             case ALLEGRO_KEY_E:
                 {
-                    int fid = crew1.eat();
+                    int fid = crew2.eat();
                     for(auto it=foods.begin(); it!=foods.end(); ) {
                         if((*it)->get_id()==fid) {
                             it = foods.erase(it);
@@ -419,6 +470,19 @@ GameWindow::process_event()
                                 Pot*& tmp = (Pot*&)obj;
                                 tmp->set_ready(false);
                             }
+                        }
+                    }
+                }
+                break;
+            case ALLEGRO_KEY_O:
+                {
+                    int fid = crew1.eat();
+                    for(auto it=foods.begin(); it!=foods.end(); ) {
+                        if((*it)->get_id()==fid) {
+                            it = foods.erase(it);
+                        }
+                        else {
+                            it++;
                         }
                     }
                 }
@@ -494,78 +558,95 @@ GameWindow::process_event()
 void
 GameWindow::draw()
 {
-    // draw to fbo
-    al_set_target_bitmap(fbo);
-    al_clear_to_color(BLACK);
-    
-    ALLEGRO_TRANSFORM trans, prev_trans;
-    al_copy_transform(&prev_trans, al_get_current_transform());
-    al_identity_transform(&trans);
-    al_scale_transform(&trans, fbo_scale, fbo_scale);
-    al_use_transform(&trans);
-    al_hold_bitmap_drawing(true);
-    al_draw_bitmap(background, 0, 0, 0);
-    for(auto line: gmap.tiles) {
-        al_draw_line(line.x1, line.y1, line.x2, line.y2, BLUE, 2);
+    if(WELCOME) {
+        al_clear_to_color(WHITE);
     }
-    al_hold_bitmap_drawing(false);
-    float scale = 3;
-    crew1.draw(width, height, scale);
-    crew2.draw(width, height, scale);
-    for(auto fire: fires) {
-        fire.draw(width, height, scale);
-    }
-    for(auto food: foods) {
-        food->draw(width, height, scale);
-    }
-    for(auto pot: pots) {
-        pot->draw(width, height, scale);
-    }
-    al_use_transform(&prev_trans);
+    else if(GAME) {
+        // draw to fbo
+        al_set_target_bitmap(fbo);
+        al_clear_to_color(BLACK);
+        
+        ALLEGRO_TRANSFORM trans, prev_trans;
+        al_copy_transform(&prev_trans, al_get_current_transform());
+        al_identity_transform(&trans);
+        al_scale_transform(&trans, fbo_scale, fbo_scale);
+        al_use_transform(&trans);
+        al_hold_bitmap_drawing(true);
+        al_draw_bitmap(background, 0, 0, 0);
+        for(auto line: gmap.tiles) {
+            al_draw_line(line.x1, line.y1, line.x2, line.y2, BLUE, 2);
+        }
+        al_hold_bitmap_drawing(false);
+        float scale = 3;
+        crew1.draw(width, height, scale);
+        crew2.draw(width, height, scale);
+        for(auto fire: fires) {
+            fire.draw(width, height, scale);
+        }
+        for(auto food: foods) {
+            food->draw(width, height, scale);
+        }
+        for(auto pot: pots) {
+            pot->draw(width, height, scale);
+        }
+        al_use_transform(&prev_trans);
 
 
-    float scale_factor = scale*height/1080;
-    // draw to screen
-    al_set_target_bitmap(screen);
-    al_clear_to_color(BACKGROUND);
-    al_draw_filled_rectangle(0, height/2, width, 3*height/2, BLACK);
-    /*===============================crew1's view=====================================*/
-    // draw crew1 and shadow
-    al_draw_scaled_bitmap(fbo, fbo_scale*(crew1['x']-width/(4*scale_factor)), fbo_scale*(crew1['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, 0, height/2, width/2, height, 0);
-    al_draw_scaled_bitmap(crew1.getShadow(), crew1['x']-width/(4*scale_factor), crew1['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
-    // draw status
-    al_draw_text(Large_font, BLACK, width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
-    al_draw_text(Large_font, BLACK, width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
-    al_draw_text(Large_font, BLACK, width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
-    al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
-    if(crew1.get_energy()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+crew1.get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
-    al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
-    if(crew1.get_water()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+crew1.get_water()*width/300, 3*height/2+170, 5, 5, WATER);
-    // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
-    if(crew1.get_poison()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+190, width/8+crew1.get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
-    // /*===============================crew2's view=====================================*/
-    al_draw_scaled_bitmap(fbo, fbo_scale*(crew2['x']-width/(4*scale_factor)), fbo_scale*(crew2['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, width/2, height/2, width/2, height, 0);
-    al_draw_scaled_bitmap(crew2.getShadow(), crew2['x']-width/(4*scale_factor), crew2['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
-    // draw split line
-    al_draw_filled_rectangle(width/2-5, 0, width/2+5, 2*height, BLACK);
-    // draw status
-    // pot
-    int i=0;
-    for(auto pot: pots) {
-        if(pot->get_status()==1) { // cooking
-            al_draw_text(Medium_font, BLACK, 20, 20+20*i, ALLEGRO_ALIGN_LEFT, to_string(pot->get_remain_time()).c_str());
+        float scale_factor = scale*height/1080;
+        // draw to screen
+        al_set_target_bitmap(screen);
+        al_clear_to_color(BACKGROUND);
+        al_draw_filled_rectangle(0, height/2, width, 3*height/2, BLACK);
+        /*===============================crew1's view=====================================*/
+        // draw crew1 and shadow
+        al_draw_scaled_bitmap(fbo, fbo_scale*(crew1['x']-width/(4*scale_factor)), fbo_scale*(crew1['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, width/2, height/2, width/2, height, 0);
+        al_draw_scaled_bitmap(crew1.getShadow(), crew1['x']-width/(4*scale_factor), crew1['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
+        // draw status
+        al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
+        al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
+        al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
+        al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
+        if(crew1.get_energy()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+crew1.get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
+        al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
+        if(crew1.get_water()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+crew1.get_water()*width/300, 3*height/2+170, 5, 5, WATER);
+        // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
+        if(crew1.get_poison()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+190, width/2+width/8+crew1.get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
+        /*===============================crew2's view=====================================*/
+        al_draw_scaled_bitmap(fbo, fbo_scale*(crew2['x']-width/(4*scale_factor)), fbo_scale*(crew2['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, 0, height/2, width/2, height, 0);
+        al_draw_scaled_bitmap(crew2.getShadow(), crew2['x']-width/(4*scale_factor), crew2['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
+        // draw status
+        al_draw_text(Large_font, BLACK, width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
+        al_draw_text(Large_font, BLACK, width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
+        al_draw_text(Large_font, BLACK, width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
+        al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
+        if(crew2.get_energy()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+crew2.get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
+        al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
+        if(crew2.get_water()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+crew2.get_water()*width/300, 3*height/2+170, 5, 5, WATER);
+        // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
+        if(crew2.get_poison()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+190, width/8+crew2.get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
+        /*=============================draw split line====================================*/
+        al_draw_filled_rectangle(width/2-5, 0, width/2+5, 2*height, BLACK);
+        // draw status
+        // pot
+        int i=0;
+        for(auto pot: pots) {
+            if(pot->get_status()==1) { // cooking
+                al_draw_text(Medium_font, BLACK, 20, 20+20*i, ALLEGRO_ALIGN_LEFT, to_string(pot->get_remain_time()).c_str());
+                i++;
+            }
+        }
+        // food
+        map<int, int> counts;
+        for(auto food: foods) {
+            counts[food->get_food_type()]++;
+        }
+        i=0;
+        for(auto g: counts) {
+            al_draw_text(Medium_font, BLACK, 100+20*i, 20, ALLEGRO_ALIGN_LEFT, to_string(g.second).c_str());
             i++;
         }
-    }
-    // food
-    map<int, int> counts;
-    for(auto food: foods) {
-        counts[food->get_food_type()]++;
-    }
-    i=0;
-    for(auto g: counts) {
-        al_draw_text(Medium_font, BLACK, 100+20*i, 20, ALLEGRO_ALIGN_LEFT, to_string(g.second).c_str());
-        i++;
+
+        menu.draw(width, height);
     }
 
     al_flip_display();

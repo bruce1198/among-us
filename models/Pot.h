@@ -18,7 +18,8 @@ private:
     int status = 0; // idle:0, cooking:1, cooked:2
     vector<Food*> contains;
     int maxContain;
-    vector<list<Food>> recipes;
+    vector<list<Gredient>> recipes;
+    vector<Gredient> recipes_target;
     int cook_time;
     bool ready = false;
     bool should_remove = false;

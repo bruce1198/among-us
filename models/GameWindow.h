@@ -15,6 +15,7 @@
 #include <fstream>
 #include "Fire.h"
 #include <map>
+#include "Menu.h"
 
 #define GAME_INIT -1
 #define GAME_SETTING 0
@@ -28,11 +29,12 @@
 
 using namespace std;
 
+enum Status { WELCOME, SETTING, GUIDE, GAME };
+
 // clock rate
 const float FPS = 60;
 
-class GameWindow
-{
+class GameWindow {
 public:
     // constructor
     GameWindow();
@@ -64,6 +66,8 @@ private:
     int height;
     int fbo_scale = 2;
 
+    Status status;
+
     ALLEGRO_BITMAP *icon;
     ALLEGRO_BITMAP *background = NULL;
     ALLEGRO_BITMAP *screen = NULL;
@@ -85,6 +89,8 @@ private:
     ALLEGRO_SAMPLE_INSTANCE *clearSound = NULL;
     ALLEGRO_SAMPLE_INSTANCE *failSound = NULL;
     ALLEGRO_SAMPLE_INSTANCE *backgroundSound = NULL;
+
+    Menu menu;
 
     Crew crew1;
     Crew crew2;

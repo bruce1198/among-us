@@ -13,6 +13,8 @@
 using namespace std;
 enum {LEFT=0, RIGHT, UP, DOWN};
 
+enum Color { BLACK=0, BLUE, BROWN, CYAN, FORTEGREEN, GREEN, LIME, ORANGE, PINK, PURPLE, RED, TAN, WHITE, YELLOW};
+
 class Crew: public Object {
 private:
     vector<ALLEGRO_BITMAP *> images;
@@ -27,7 +29,7 @@ private:
     int direction = 1;
     int flag = 1;
     int speed;
-    string color;
+    Color color;
 
     float fullness;
     float waterness;
@@ -41,7 +43,7 @@ private:
     bool initBuffer = false;
 public:
     Crew() {};
-    Crew(int);
+    Crew(int, Color c);
     ~Crew();
     map<char, int> getPosition();
     void update(int, int);

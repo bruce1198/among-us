@@ -3,10 +3,10 @@
 
 Pot::Pot(PotType type) {
     obj_type = POT;
-    // pos_x = rand()%2500+100;
-    // pos_y = rand()%1200+600;
-        pos_x = 1440;
-        pos_y = 986;
+    pos_x = rand()%2500+100;
+    pos_y = rand()%1200+600;
+    pos_x = 1440;
+    pos_y = 986;
     this->type = type;
     status = 0;
     switch (type) {
@@ -14,31 +14,71 @@ Pot::Pot(PotType type) {
             image = al_load_bitmap("assets/images/food/flat.png");
             color = al_map_rgb(96, 96, 96);
             maxContain = 4;
+            recipes.push_back({EGG, RICE, TSON});
+            recipes.push_back({MEAT, BROCO, CARROT, MUSH});
+            recipes_target.push_back(FRIED);
+            recipes_target.push_back(STEAK);
             break;
         case NORMAL:
             image = al_load_bitmap("assets/images/food/normal.png");
             color = al_map_rgb(224, 224, 224);
+            recipes.push_back({LOBSTER, LU});
+            recipes_target.push_back(LOBSTERCOOKED);
             maxContain = 4;
             break;
         case CLEAN:
             image = al_load_bitmap("assets/images/food/clean.png");
             color = al_map_rgb(204, 255, 255);
+            recipes.push_back({RIVER});
+            recipes_target.push_back(WATER);
             maxContain = 1;
             break;
+        for(auto& v: recipes) {
+            v.sort();
+        }
     }
 }
 
 Pot::~Pot() {
 }
 
+bool compare (Food*& first, Food*& second) {
+    return first->get_food_type() < second->get_food_type();
+}
+
+
 vector<Food*> Pot::update() {
     vector<Food*> tmp;
     if(should_remove) {
         tmp = contains;
-        Food* newFood = new Food(STEAK, -1);
+        bool match = false;
+        int i=-1;
+        int target;
+        for(auto v: recipes) {
+            i++;
+            if(tmp.size() != v.size()) continue;
+            sort(tmp.begin(), tmp.end(), compare);
+            match = true;
+            target = i;
+            int j=0;
+            for(auto g: v) {
+                if(tmp[j]->get_food_type()!=g) {
+                    match = false;
+                    break;
+                }
+                j++;
+            }
+        }
+        Food* newFood;
+        if(match) {
+            newFood = new Food(recipes_target[target], -1);
+        }
+        else {
+            newFood = new Food(POOP, -1);
+        }
         newFood->set_pos(this->get_x()-40, this->get_y()+40);
         tmp.push_back(newFood);
-        contains.empty();
+        contains.clear();
         should_remove = false;
         status = 0;
     }
@@ -79,6 +119,9 @@ void Pot::time_ellapsed() {
 
 void Pot::insert(Food*& food) {
     cout << type << ": insert food!" << endl;
+    if(food->get_food_type()==STEAK || food->get_food_type()==FRIED
+        || food->get_food_type()==LOBSTERCOOKED || food->get_food_type()==WATER)
+        return;
     if(contains.empty()) {
         status = 1;
         switch (type) {

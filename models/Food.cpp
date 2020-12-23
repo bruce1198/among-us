@@ -5,6 +5,8 @@ Food::Food(Gredient g, int id) {
     obj_type = FOOD;
     pos_x = rand()%2500+100;
     pos_y = rand()%1200+600;
+    pos_x = 1050 + 20*id;
+    pos_y = 800;
     type = g;
     inPot = false;
     switch (type) {
@@ -106,6 +108,12 @@ Food::Food(Gredient g, int id) {
         water = 50;
         poison = 0;
         break;
+    case POOP:
+        image = al_load_bitmap("assets/images/food/poop.png");
+        color = al_map_rgb(0, 0, 0);
+        ounce = 0;
+        water = 0;
+        poison = 100;
     default:
         break;
     }
@@ -169,6 +177,9 @@ void Food::draw(int width, int height, int scale) {
     case LU:
         scale_factor = 0.38*0.3*height/1080;
         break;
+    case EGG:
+        scale_factor = 0.38*0.3*height/1080;
+        break;
     case RICE:
         scale_factor = 0.38*0.3*height/1080;
         break;
@@ -200,6 +211,9 @@ void Food::draw(int width, int height, int scale) {
         scale_factor = 0.38*0.3*height/1080;
         break;
     case WATER:
+        scale_factor = 0.38*0.3*height/1080;
+        break;
+    case POOP:
         scale_factor = 0.38*0.3*height/1080;
         break;
     default:

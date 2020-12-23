@@ -5,7 +5,7 @@
 #include <time.h>
 #include "Object.h"
 
-enum Gredient { LOBSTER=0, LU, EGG, RICE, TSON, MEAT, BROCO, CARROT, MUSH, RIVER, WATER, FRIED, LOBSTERCOOKED, STEAK};
+enum Gredient { LOBSTER=0, LU, EGG, RICE, TSON, MEAT, BROCO, CARROT, MUSH, RIVER, WATER, FRIED, LOBSTERCOOKED, STEAK, POOP};
 
 class Food: public Object {
 private:
@@ -32,6 +32,7 @@ public:
     int get_poison() { return poison; };
     bool is_in_pot() { return inPot; };
     void put_in_pot() { inPot = true; };
+    void set_id(int id) { fid=id; };
 };
 
 #endif

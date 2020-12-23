@@ -1,0 +1,8 @@
+steak 4
+meat broco carrot mushroom
+water 1
+river
+lobster 2
+lobster lu
+fried_rice 3
+egg rice tson
