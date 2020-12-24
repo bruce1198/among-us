@@ -266,6 +266,7 @@ GameWindow::destroy()
     al_destroy_font(font);
     al_destroy_font(Medium_font);
     al_destroy_font(Large_font);
+    al_destroy_font(Huge_font);
 
     al_destroy_timer(timer);
     al_destroy_timer(second_timer);
@@ -285,7 +286,9 @@ GameWindow::destroy()
 
     al_destroy_bitmap(icon);
     al_destroy_bitmap(background);
+    if(screen!=NULL)
     al_destroy_bitmap(screen);
+    if(fbo!=NULL)
     al_destroy_bitmap(fbo);
 
     al_destroy_sample(sample);
@@ -341,9 +344,6 @@ GameWindow::process_event()
         switch(event.keyboard.keycode) {
             case ALLEGRO_KEY_ESCAPE:
                 menu->toggle();
-                break;
-            case ALLEGRO_KEY_C:
-                reset();
                 break;
             case ALLEGRO_KEY_Q:
                 return GAME_EXIT;

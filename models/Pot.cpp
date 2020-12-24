@@ -40,6 +40,7 @@ Pot::Pot(PotType type) {
 }
 
 Pot::~Pot() {
+    al_destroy_bitmap(image);
 }
 
 bool compare (Food*& first, Food*& second) {

@@ -120,24 +120,12 @@ Food::Food(Gredient g, int id) {
 }
 
 Food::~Food() {
-
+    al_destroy_bitmap(image);
 }
 
 void Food::drawOnScreen(int x, int y) {
     int w, h;
     float scale_factor;
-    // if(cooked) {
-    //     w = al_get_bitmap_width(cooked_image);
-    //     h = al_get_bitmap_height(cooked_image);
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     al_draw_scaled_bitmap(cooked_image, 0, 0, w, h, pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, 0);
-    // }
-    // else {
-    //     w = al_get_bitmap_width(uncooked_image);
-    //     h = al_get_bitmap_height(uncooked_image);
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     al_draw_scaled_bitmap(uncooked_image, 0, 0, w, h, pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, 0);
-    // }
     scale_factor = 0.5;
     switch (type) {
     case LOBSTER:

@@ -10,8 +10,8 @@ Fire::Fire(int x, int y){
     image = al_load_bitmap("assets/images/food/fire.png");
 }
 
-Fire::~Fire()
-{
+Fire::~Fire() {
+    al_destroy_bitmap(image);
 }
 
 void Fire::draw(int width, int height, int scale) {

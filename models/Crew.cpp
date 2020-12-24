@@ -30,7 +30,11 @@ Crew::Crew(int id, Color color) {
 }
 
 Crew::~Crew() {
-
+    for(auto image: images) {
+        al_destroy_bitmap(image);
+    }
+    al_destroy_bitmap(buffer);
+    al_destroy_bitmap(shadow_buffer);
 }
 
 float Crew::get_energy() {
