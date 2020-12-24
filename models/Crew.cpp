@@ -223,9 +223,9 @@ ALLEGRO_BITMAP* Crew::getShadow() {
 }
 
 void Crew::time_elapsed() {
-    fullness -= 1;
+    fullness -= 0.3;
     if(fullness<=0) fullness=0;
-    waterness -= 1.5;
+    waterness -= 0.45;
     if(waterness<=0) waterness=0;
 }
 

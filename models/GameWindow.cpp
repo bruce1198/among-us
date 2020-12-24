@@ -29,6 +29,16 @@ GameWindow::init()
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
     icon = al_load_bitmap("assets/images/icon.png");
     background = al_load_bitmap("assets/images/map.png");
+    vector<string> tmp = {"lobster", "lu", "egg", "rice", "tson", "meat", "broco", "carrot", "mushroom", "river", "water", "fried_rice", "lobster_cooked", "steak", "poop"};
+    for(int i=0; i<tmp.size(); i++) {
+        string buf = "assets/images/food/"+tmp[i]+".png";
+        food_images[i] = al_load_bitmap(buf.c_str());
+    }
+    vector<string> tmp2 = {"flat", "normal", "clean"};
+    for(int i=0; i<tmp.size(); i++) {
+        string buf = "assets/images/food/"+tmp2[i]+".png";
+        pot_images[i] = al_load_bitmap(buf.c_str());
+    }
 
     screen = al_get_target_bitmap();
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
@@ -136,6 +146,7 @@ GameWindow::GameWindow()
     font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",12,0); // load small font
     Medium_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",24,0); //load medium font
     Large_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",36,0); //load large font
+    Huge_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",72,0); //load large font
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -178,8 +189,8 @@ GameWindow::update()
 {
     // models' status ex. moving
 
-    crew1.update(width, height);
-    crew2.update(width, height);
+    crew1->update(width, height);
+    crew2->update(width, height);
     for(auto pot: pots) {
         vector<Food*> shouldRemove = pot->update();
         for(auto food: shouldRemove) {
@@ -210,13 +221,15 @@ GameWindow::reset()
     int c1 = rand()%14;
     int c2;
     while((c2=rand()%14)==c1) ;
-    crew1 = Crew(0, (Color)c1);
-    crew2 = Crew(1, (Color)c2);
+    crew1 = new Crew(0, (Color)c1);
+    crew2 = new Crew(1, (Color)c2);
     mute = false;
     redraw = false;
 
     fstream config("config/fire.txt", ios_base::in);
     fires.clear();
+    foods.clear();
+    pots.clear();
     int x, y;
     while(config >> x >> y) {
         fires.push_back(Fire(x, y));
@@ -256,13 +269,33 @@ GameWindow::destroy()
 
     al_destroy_timer(timer);
     al_destroy_timer(second_timer);
+    al_destroy_timer(food_timer);
+
+    for(auto food: foods) {
+        delete food;
+    }
+    for(auto pot: pots) {
+        delete pot;
+    }
+
+    for(auto image: food_images)
+        al_destroy_bitmap(image.second);
+    for(auto image: pot_images)
+        al_destroy_bitmap(image.second);
 
     al_destroy_bitmap(icon);
     al_destroy_bitmap(background);
+    al_destroy_bitmap(screen);
+    al_destroy_bitmap(fbo);
 
     al_destroy_sample(sample);
     al_destroy_sample_instance(startSound);
     al_destroy_sample_instance(backgroundSound);
+
+    delete crew1;
+    delete crew2;
+    delete gmap;
+    delete menu;
 
 }
 
@@ -280,8 +313,8 @@ GameWindow::process_event()
             redraw = true;
         }
         else if(event.timer.source == second_timer) {
-            crew1.time_elapsed();
-            crew2.time_elapsed();
+            crew1->time_elapsed();
+            crew2->time_elapsed();
             for(auto pot: pots) pot->time_ellapsed();
         }
         else if(event.timer.source == food_timer) {
@@ -301,51 +334,54 @@ GameWindow::process_event()
     else if(event.type == ALLEGRO_EVENT_KEY_DOWN) {
         float min_dist = 400;
         Object* target;
-        float x1 = crew1['x'];
-        float y1 = crew1['y'];
-        float x2 = crew2['x'];
-        float y2 = crew2['y'];
+        float x1 = (*crew1)['x'];
+        float y1 = (*crew1)['y'];
+        float x2 = (*crew2)['x'];
+        float y2 = (*crew2)['y'];
         switch(event.keyboard.keycode) {
             case ALLEGRO_KEY_ESCAPE:
-                menu.toggle();
+                menu->toggle();
+                break;
+            case ALLEGRO_KEY_C:
+                reset();
                 break;
             case ALLEGRO_KEY_Q:
                 return GAME_EXIT;
             case ALLEGRO_KEY_UP:
-                crew1.set_direction(UP);
+                crew1->set_direction(UP);
                 break;
             case ALLEGRO_KEY_DOWN:
-                crew1.set_direction(DOWN);
+                crew1->set_direction(DOWN);
                 break;
             case ALLEGRO_KEY_LEFT:
-                crew1.set_direction(LEFT);
+                crew1->set_direction(LEFT);
                 break;
             case ALLEGRO_KEY_RIGHT:
-                crew1.set_direction(RIGHT);
+                crew1->set_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_W:
-                crew2.set_direction(UP);
+                crew2->set_direction(UP);
                 break;
             case ALLEGRO_KEY_S:
-                crew2.set_direction(DOWN);
+                crew2->set_direction(DOWN);
                 break;
             case ALLEGRO_KEY_A:
-                crew2.set_direction(LEFT);
+                crew2->set_direction(LEFT);
                 break;
             case ALLEGRO_KEY_D:
-                crew2.set_direction(RIGHT);
+                crew2->set_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_R:
-                if(crew2.ableToPick()) {
+                if(crew2->ableToPick()) {
                     for(auto& food: foods) {
-                        int dist = pow(food->get_x()-crew2['x'], 2)+pow(food->get_y()-crew2['y'], 2);
+                        int dist = pow(food->get_x()-(*crew2)['x'], 2)+pow(food->get_y()-(*crew2)['y'], 2);
                         if(dist<min_dist && !food->is_in_pot()) {
                             min_dist = dist;
                             target = food;
                         }
                     }
                     for(auto& pot: pots) {
-                        int dist = pow(pot->get_x()-crew2['x'], 2)+pow(pot->get_y()-crew2['y'], 2);
+                        int dist = pow(pot->get_x()-(*crew2)['x'], 2)+pow(pot->get_y()-(*crew2)['y'], 2);
                         if(dist<min_dist) {
                             min_dist = dist;
                             target = pot;
@@ -355,11 +391,11 @@ GameWindow::process_event()
                         if(target->get_type()==POT) {
                             ((Pot*)target)->set_ready(false);
                         }
-                        crew2.pick(target);
+                        crew2->pick(target);
                     }
                 }
                 else {
-                    Object* obj = crew2.put();
+                    Object* obj = crew2->put();
                     if(obj) {
                         if(obj->get_type()==FOOD) {
                             Pot* target_pot;
@@ -400,7 +436,7 @@ GameWindow::process_event()
                 break;
             case ALLEGRO_KEY_E:
                 {
-                    int fid = crew2.eat();
+                    int fid = crew2->eat();
                     for(auto it=foods.begin(); it!=foods.end(); ) {
                         if((*it)->get_id()==fid) {
                             it = foods.erase(it);
@@ -412,7 +448,7 @@ GameWindow::process_event()
                 }
                 break;
             case ALLEGRO_KEY_P:
-                if(crew1.ableToPick()) {
+                if(crew1->ableToPick()) {
                     for(auto& food: foods) {
                         int dist = pow(food->get_x()-x1, 2)+pow(food->get_y()-y1, 2);
                         if(dist<min_dist && !food->is_in_pot()) {
@@ -431,11 +467,11 @@ GameWindow::process_event()
                         if(target->get_type()==POT) {
                             ((Pot*)target)->set_ready(false);
                         }
-                        crew1.pick(target);
+                        crew1->pick(target);
                     }
                 }
                 else {
-                    Object* obj = crew1.put();
+                    Object* obj = crew1->put();
                     if(obj) {
                         if(obj->get_type()==FOOD) {
                             Pot* target_pot;
@@ -476,7 +512,7 @@ GameWindow::process_event()
                 break;
             case ALLEGRO_KEY_O:
                 {
-                    int fid = crew1.eat();
+                    int fid = crew1->eat();
                     for(auto it=foods.begin(); it!=foods.end(); ) {
                         if((*it)->get_id()==fid) {
                             it = foods.erase(it);
@@ -488,9 +524,9 @@ GameWindow::process_event()
                 }
                 break;
             case ALLEGRO_KEY_L:
-                gmap.load_lines();
-                crew1.reload();
-                crew2.reload();
+                gmap->load_lines();
+                crew1->reload();
+                crew2->reload();
                 break;
             case ALLEGRO_KEY_M:
                 mute = !mute;
@@ -504,28 +540,28 @@ GameWindow::process_event()
     else if(event.type == ALLEGRO_EVENT_KEY_UP) {
         switch(event.keyboard.keycode) {
             case ALLEGRO_KEY_UP:
-                crew1.remove_direction(UP);
+                crew1->remove_direction(UP);
                 break;
             case ALLEGRO_KEY_DOWN:
-                crew1.remove_direction(DOWN);
+                crew1->remove_direction(DOWN);
                 break;
             case ALLEGRO_KEY_LEFT:
-                crew1.remove_direction(LEFT);
+                crew1->remove_direction(LEFT);
                 break;
             case ALLEGRO_KEY_RIGHT:
-                crew1.remove_direction(RIGHT);
+                crew1->remove_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_W:
-                crew2.remove_direction(UP);
+                crew2->remove_direction(UP);
                 break;
             case ALLEGRO_KEY_S:
-                crew2.remove_direction(DOWN);
+                crew2->remove_direction(DOWN);
                 break;
             case ALLEGRO_KEY_A:
-                crew2.remove_direction(LEFT);
+                crew2->remove_direction(LEFT);
                 break;
             case ALLEGRO_KEY_D:
-                crew2.remove_direction(RIGHT);
+                crew2->remove_direction(RIGHT);
                 break;
         }
     }
@@ -573,13 +609,13 @@ GameWindow::draw()
         al_use_transform(&trans);
         al_hold_bitmap_drawing(true);
         al_draw_bitmap(background, 0, 0, 0);
-        for(auto line: gmap.tiles) {
+        for(auto line: gmap->tiles) {
             al_draw_line(line.x1, line.y1, line.x2, line.y2, BLUE, 2);
         }
         al_hold_bitmap_drawing(false);
         float scale = 3;
-        crew1.draw(width, height, scale);
-        crew2.draw(width, height, scale);
+        crew1->draw(width, height, scale);
+        crew2->draw(width, height, scale);
         for(auto fire: fires) {
             fire.draw(width, height, scale);
         }
@@ -599,41 +635,46 @@ GameWindow::draw()
         al_draw_filled_rectangle(0, height/2, width, 3*height/2, BLACK);
         /*===============================crew1's view=====================================*/
         // draw crew1 and shadow
-        al_draw_scaled_bitmap(fbo, fbo_scale*(crew1['x']-width/(4*scale_factor)), fbo_scale*(crew1['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, width/2, height/2, width/2, height, 0);
-        al_draw_scaled_bitmap(crew1.getShadow(), crew1['x']-width/(4*scale_factor), crew1['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
+        al_draw_scaled_bitmap(fbo, fbo_scale*((*crew1)['x']-width/(4*scale_factor)), fbo_scale*((*crew1)['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, width/2, height/2, width/2, height, 0);
+        al_draw_scaled_bitmap(crew1->getShadow(), (*crew1)['x']-width/(4*scale_factor), (*crew1)['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
         // draw status
         al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
         al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
         al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
         al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
-        if(crew1.get_energy()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+crew1.get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
+        if(crew1->get_energy()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+crew1->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
         al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
-        if(crew1.get_water()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+crew1.get_water()*width/300, 3*height/2+170, 5, 5, WATER);
+        if(crew1->get_water()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+crew1->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
         // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
-        if(crew1.get_poison()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+190, width/2+width/8+crew1.get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
+        if(crew1->get_poison()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+190, width/2+width/8+crew1->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
         /*===============================crew2's view=====================================*/
-        al_draw_scaled_bitmap(fbo, fbo_scale*(crew2['x']-width/(4*scale_factor)), fbo_scale*(crew2['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, 0, height/2, width/2, height, 0);
-        al_draw_scaled_bitmap(crew2.getShadow(), crew2['x']-width/(4*scale_factor), crew2['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
+        al_draw_scaled_bitmap(fbo, fbo_scale*((*crew2)['x']-width/(4*scale_factor)), fbo_scale*((*crew2)['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, 0, height/2, width/2, height, 0);
+        al_draw_scaled_bitmap(crew2->getShadow(), (*crew2)['x']-width/(4*scale_factor), (*crew2)['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
         // draw status
         al_draw_text(Large_font, BLACK, width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
         al_draw_text(Large_font, BLACK, width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
         al_draw_text(Large_font, BLACK, width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
         al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
-        if(crew2.get_energy()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+crew2.get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
+        if(crew2->get_energy()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+crew2->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
         al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
-        if(crew2.get_water()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+crew2.get_water()*width/300, 3*height/2+170, 5, 5, WATER);
+        if(crew2->get_water()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+crew2->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
         // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
-        if(crew2.get_poison()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+190, width/8+crew2.get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
+        if(crew2->get_poison()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+190, width/8+crew2->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
         /*=============================draw split line====================================*/
-        al_draw_filled_rectangle(width/2-5, 0, width/2+5, 2*height, BLACK);
+        al_draw_filled_rectangle(width/2-5, height/2, width/2+5, 3*height/2, al_map_rgb(255, 0, 0));
         // draw status
         // pot
         int i=0;
+        al_draw_rounded_rectangle(20, 20, 900, height/2 - 20, 10, 10, BLACK, 10);
         for(auto pot: pots) {
-            if(pot->get_status()==1) { // cooking
-                al_draw_text(Medium_font, BLACK, 20, 20+20*i, ALLEGRO_ALIGN_LEFT, to_string(pot->get_remain_time()).c_str());
-                i++;
+            al_draw_scaled_bitmap(pot->get_image(), 0, 0, 500, 500, 100+150*i, 150, 100, 100, 0);
+            if(pot->get_status()==1 && pot->is_ready()) { // cooking
+                al_draw_text(Large_font, BLACK, 150+150*i, 250, ALLEGRO_ALIGN_CENTER, to_string(pot->get_remain_time()).c_str());
             }
+            else {
+                al_draw_text(Large_font, BLACK, 150+150*i, 250, ALLEGRO_ALIGN_CENTER, "IDLE");
+            }
+            i++;
         }
         // food
         map<int, int> counts;
@@ -641,12 +682,37 @@ GameWindow::draw()
             counts[food->get_food_type()]++;
         }
         i=0;
+        al_draw_rounded_rectangle(950, 20, 2100, height/2 - 20, 10, 10, BLACK, 10);
         for(auto g: counts) {
-            al_draw_text(Medium_font, BLACK, 100+20*i, 20, ALLEGRO_ALIGN_LEFT, to_string(g.second).c_str());
+            int h;
+            if(i<5) h = 50;
+            else if(i<10) h = 170;
+            else h = 290;
+            al_draw_scaled_bitmap(food_images[g.first], 0, 0, 500, 500, 1000+220*(i%5), h, 100, 100, 0);
+            al_draw_text(Large_font, BLACK, 1100+220*(i%5), h+30, ALLEGRO_ALIGN_LEFT, ("*"+to_string(g.second)).c_str());
             i++;
         }
+        //recipe
+        //lobster
+        al_draw_scaled_bitmap(food_images[0], 0, 0, 500, 500, 2250, 50, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[1], 0, 0, 500, 500, 2350, 50, 100, 100, 0);
+        al_draw_scaled_bitmap(pot_images[1], 0, 0, 500, 500, 2450, 50, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[12], 0, 0, 500, 500, 2700, 50, 100, 100, 0);
+        //fried rice
+        al_draw_scaled_bitmap(food_images[2], 0, 0, 500, 500, 2200, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[3], 0, 0, 500, 500, 2300, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[4], 0, 0, 500, 500, 2400, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(pot_images[0], 0, 0, 500, 500, 2500, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[11], 0, 0, 500, 500, 2700, 170, 100, 100, 0);
+        //steak
+        al_draw_scaled_bitmap(food_images[5], 0, 0, 500, 500, 2150, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[6], 0, 0, 500, 500, 2250, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[7], 0, 0, 500, 500, 2350, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[8], 0, 0, 500, 500, 2450, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(pot_images[0], 0, 0, 500, 500, 2550, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[13], 0, 0, 500, 500, 2700, 290, 100, 100, 0);
 
-        menu.draw(width, height);
+        menu->draw(width, height);
     }
 
     al_flip_display();

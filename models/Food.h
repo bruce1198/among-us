@@ -33,6 +33,7 @@ public:
     bool is_in_pot() { return inPot; };
     void put_in_pot() { inPot = true; };
     void set_id(int id) { fid=id; };
+    ALLEGRO_BITMAP* get_image() { return image; };
 };
 
 #endif

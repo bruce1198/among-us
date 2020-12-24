@@ -6,15 +6,16 @@
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_audio.h>
 #include <allegro5/allegro_acodec.h>
+#include <fstream>
+#include <ctime>
 #include <vector>
+#include <map>
 #include <list>
+#include <set>
 #include "Food.h"
 #include "Pot.h"
-#include <time.h>
 #include "Crew.h"
-#include <fstream>
 #include "Fire.h"
-#include <map>
 #include "Menu.h"
 
 #define GAME_INIT -1
@@ -72,11 +73,14 @@ private:
     ALLEGRO_BITMAP *background = NULL;
     ALLEGRO_BITMAP *screen = NULL;
     ALLEGRO_BITMAP *fbo = NULL;
+    map<int, ALLEGRO_BITMAP*> food_images;
+    map<int, ALLEGRO_BITMAP*> pot_images;
 
     ALLEGRO_DISPLAY* display = NULL;
     ALLEGRO_FONT *font = NULL;
     ALLEGRO_FONT *Medium_font = NULL;
     ALLEGRO_FONT *Large_font = NULL;
+    ALLEGRO_FONT *Huge_font = NULL;
 
     ALLEGRO_EVENT_QUEUE *event_queue = NULL;
     ALLEGRO_EVENT event;
@@ -90,12 +94,12 @@ private:
     ALLEGRO_SAMPLE_INSTANCE *failSound = NULL;
     ALLEGRO_SAMPLE_INSTANCE *backgroundSound = NULL;
 
-    Menu menu;
+    Menu* menu;
 
-    Crew crew1;
-    Crew crew2;
+    Crew* crew1;
+    Crew* crew2;
     
-    Map gmap;
+    Map* gmap;
     vector<Fire> fires;
 
     int food_pk = 0;

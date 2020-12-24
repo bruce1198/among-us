@@ -33,6 +33,8 @@ public:
     void set_ready(bool ready) { this->ready = ready; };
     int get_status() { return status; };
     int get_remain_time() { return cook_time; };
+    bool is_ready() { return ready; };
+    ALLEGRO_BITMAP* get_image() { return image; };
 };
 
 #endif
