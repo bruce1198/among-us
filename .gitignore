@@ -3,7 +3,10 @@ allegro/
 .DS_Store
 main.exe
 main
-DeleteMe.*
+*.cbp
+*.depend
+*.layout
+*.log
 bin/
 obj/
 *.dll
