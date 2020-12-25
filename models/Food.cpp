@@ -5,8 +5,8 @@ Food::Food(Gredient g, int id) {
     obj_type = FOOD;
     pos_x = rand()%2500+100;
     pos_y = rand()%1200+600;
-    pos_x = 1050 + 20*id;
-    pos_y = 800;
+    // pos_x = 1050 + 20*id;
+    // pos_y = 800;
     type = g;
     inPot = false;
     switch (type) {
@@ -120,7 +120,8 @@ Food::Food(Gredient g, int id) {
 }
 
 Food::~Food() {
-    al_destroy_bitmap(image);
+    if(image!=NULL)
+        al_destroy_bitmap(image);
 }
 
 void Food::drawOnScreen(int x, int y) {
@@ -157,56 +158,56 @@ void Food::drawOnScreen(int x, int y) {
 
 void Food::draw(int width, int height, int scale) {
     int w, h;
-    float scale_factor;
-    switch (type) {
-    case LOBSTER:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case LU:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case EGG:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case RICE:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case TSON:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case MEAT:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case BROCO:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case CARROT:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case MUSH:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case RIVER:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case LOBSTERCOOKED:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case FRIED:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case STEAK:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case WATER:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    case POOP:
-        scale_factor = 0.38*0.3*height/1080;
-        break;
-    default:
-        break;
-    }
+    float scale_factor = 0.57*height/1080;
+    // switch (type) {
+    // case LOBSTER:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case LU:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case EGG:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case RICE:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case TSON:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case MEAT:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case BROCO:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case CARROT:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case MUSH:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case RIVER:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case LOBSTERCOOKED:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case FRIED:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case STEAK:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case WATER:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // case POOP:
+    //     scale_factor = 0.38*0.3*height/1080;
+    //     break;
+    // default:
+    //     break;
+    // }
 
     if(image != NULL) {
         w = al_get_bitmap_width(image);

@@ -12,7 +12,7 @@ enum PotType { FLAT=0, NORMAL, CLEAN };
 
 class Pot: public Object {
 private:
-    ALLEGRO_BITMAP* image;
+    ALLEGRO_BITMAP* image = NULL;
     ALLEGRO_COLOR color;
     PotType type;
     int status = 0; // idle:0, cooking:1, cooked:2

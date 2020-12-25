@@ -33,8 +33,11 @@ Crew::~Crew() {
     for(auto image: images) {
         al_destroy_bitmap(image);
     }
-    al_destroy_bitmap(buffer);
-    al_destroy_bitmap(shadow_buffer);
+    if(shadow_buffer!=NULL)
+        al_destroy_bitmap(shadow_buffer);
+    if(pickedup!=NULL) {
+        delete pickedup;
+    }
 }
 
 float Crew::get_energy() {
@@ -92,7 +95,7 @@ void Crew::load_images() {
         buf += "white";
         break;
     case YELLOW:
-        buf += "yello";
+        buf += "yellow";
         break;
     }
     for(int i=1; i<=23; i++) {
@@ -238,7 +241,9 @@ int Crew::eat() {
         if(pickedup->get_type()==FOOD) {
             Food* tmp = (Food*)pickedup;
             fullness += tmp->get_ounce();
+            if(fullness>100) fullness = 100;
             waterness += tmp->get_water();
+            if(waterness>100) waterness = 100;
             poisoness += tmp->get_poison();
             return tmp->get_id();
         }
@@ -265,7 +270,7 @@ Object* Crew::put() {
     return nullptr;
 }
 
-void Crew::update(int width, int height) {
+bool Crew::update(int width, int height) {
 
     // update crew status
     int w, h;
@@ -372,6 +377,8 @@ void Crew::update(int width, int height) {
     // update pickedup food position
     if(pickedup)
         pickedup->set_pos(pos_x, pos_y-30);
+
+    return poisoness>=100 || fullness <=0 || waterness <= 0;
 }
 
 void Crew::set_direction(int dir) {

@@ -5,8 +5,8 @@ Pot::Pot(PotType type) {
     obj_type = POT;
     pos_x = rand()%2500+100;
     pos_y = rand()%1200+600;
-    pos_x = 1440;
-    pos_y = 986;
+    // pos_x = 1440;
+    // pos_y = 986;
     this->type = type;
     status = 0;
     switch (type) {
@@ -40,7 +40,13 @@ Pot::Pot(PotType type) {
 }
 
 Pot::~Pot() {
-    al_destroy_bitmap(image);
+    if(image!=NULL)
+        al_destroy_bitmap(image);
+    for(auto food: contains) {
+        if(food) {
+            delete food;
+        }
+    }
 }
 
 bool compare (Food*& first, Food*& second) {
@@ -147,7 +153,7 @@ void Pot::insert(Food*& food) {
 
 void Pot::draw(int width, int height, int scale) {
 
-    float scale_factor = 0.38*0.3*height/1080;
+    float scale_factor = 0.57*height/1080;
     if(image != NULL) {
         int w, h;
         w = al_get_bitmap_width(image);

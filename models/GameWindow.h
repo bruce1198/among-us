@@ -12,6 +12,7 @@
 #include <map>
 #include <list>
 #include <set>
+#include "Welcome.h"
 #include "Food.h"
 #include "Pot.h"
 #include "Crew.h"
@@ -43,6 +44,8 @@ public:
     void init();
     void reset();
     void play();
+    void play_game();
+    void go_welcome();
     void begin();
 
     int run();
@@ -69,7 +72,7 @@ private:
 
     Status status;
 
-    ALLEGRO_BITMAP *icon;
+    ALLEGRO_BITMAP *icon = NULL;
     ALLEGRO_BITMAP *background = NULL;
     ALLEGRO_BITMAP *screen = NULL;
     ALLEGRO_BITMAP *fbo = NULL;
@@ -93,14 +96,16 @@ private:
     ALLEGRO_SAMPLE_INSTANCE *clearSound = NULL;
     ALLEGRO_SAMPLE_INSTANCE *failSound = NULL;
     ALLEGRO_SAMPLE_INSTANCE *backgroundSound = NULL;
+    ALLEGRO_SAMPLE_INSTANCE *welcomeSound = NULL;
 
-    Menu* menu;
+    Welcome* welcome = NULL;
+    Menu* menu = NULL;
 
-    Crew* crew1;
-    Crew* crew2;
+    Crew* crew1 = NULL;
+    Crew* crew2 = NULL;
     
-    Map* gmap;
-    vector<Fire> fires;
+    Map* gmap = NULL;
+    vector<Fire*> fires;
 
     int food_pk = 0;
     list<Food*> foods;

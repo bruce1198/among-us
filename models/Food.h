@@ -9,7 +9,7 @@ enum Gredient { LOBSTER=0, LU, EGG, RICE, TSON, MEAT, BROCO, CARROT, MUSH, RIVER
 
 class Food: public Object {
 private:
-    ALLEGRO_BITMAP* image;
+    ALLEGRO_BITMAP* image = NULL;
     int fid;
     int ounce;
     int water;

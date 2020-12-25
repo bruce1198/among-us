@@ -19,8 +19,8 @@ class Crew: public Object {
 private:
     vector<ALLEGRO_BITMAP *> images;
 
-    ALLEGRO_BITMAP* shadow_buffer;
-    ALLEGRO_BITMAP* buffer;
+    ALLEGRO_BITMAP* shadow_buffer = NULL;
+    ALLEGRO_BITMAP* buffer = NULL;
     int id;
     int counter;
     int sprite_pos = 0;
@@ -46,7 +46,7 @@ public:
     Crew(int, Color c);
     ~Crew();
     map<char, int> getPosition();
-    void update(int, int);
+    bool update(int, int);
     void draw(int, int, int);
     void reload();
     ALLEGRO_BITMAP* getShadow();
@@ -57,7 +57,7 @@ public:
     int eat();
     void pick(Object*&);
     Object* put();
-    bool ableToPick() {return canPick; }
+    bool ableToPick() { return canPick; }
     friend ostream& operator<<(ostream &os, Crew &hero);
     void time_elapsed();
     float get_energy();

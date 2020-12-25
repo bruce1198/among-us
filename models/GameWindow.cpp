@@ -24,10 +24,20 @@ using namespace std;
 void
 GameWindow::init()
 {
+    menu = new Menu();
+    welcome = new Welcome();
+    gmap = new Map();
+    fstream config("config/fire.txt", ios_base::in);
+    int x, y;
+    while(config >> x >> y) {
+        fires.push_back(new Fire(x, y));
+    }
+
+
     std::string buffer;
 
     al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
-    icon = al_load_bitmap("assets/images/icon.png");
+    icon = al_load_bitmap("assets/images/icon_small.png");
     background = al_load_bitmap("assets/images/map.png");
     vector<string> tmp = {"lobster", "lu", "egg", "rice", "tson", "meat", "broco", "carrot", "mushroom", "river", "water", "fried_rice", "lobster_cooked", "steak", "poop"};
     for(int i=0; i<tmp.size(); i++) {
@@ -35,7 +45,7 @@ GameWindow::init()
         food_images[i] = al_load_bitmap(buf.c_str());
     }
     vector<string> tmp2 = {"flat", "normal", "clean"};
-    for(int i=0; i<tmp.size(); i++) {
+    for(int i=0; i<tmp2.size(); i++) {
         string buf = "assets/images/food/"+tmp2[i]+".png";
         pot_images[i] = al_load_bitmap(buf.c_str());
     }
@@ -52,10 +62,15 @@ GameWindow::init()
     al_set_sample_instance_playmode(startSound, ALLEGRO_PLAYMODE_ONCE);
     al_attach_sample_instance_to_mixer(startSound, al_get_default_mixer());
 
-    sample = al_load_sample("assets/audio/BackgroundMusic.ogg");
+    sample = al_load_sample("assets/audio/BackgroundMusic.wav");
     backgroundSound = al_create_sample_instance(sample);
-    al_set_sample_instance_playmode(backgroundSound, ALLEGRO_PLAYMODE_ONCE);
+    al_set_sample_instance_playmode(backgroundSound, ALLEGRO_PLAYMODE_LOOP);
     al_attach_sample_instance_to_mixer(backgroundSound, al_get_default_mixer());
+
+    sample = al_load_sample("assets/audio/welcomeMusic.wav");
+    welcomeSound = al_create_sample_instance(sample);
+    al_set_sample_instance_playmode(welcomeSound, ALLEGRO_PLAYMODE_LOOP);
+    al_attach_sample_instance_to_mixer(welcomeSound, al_get_default_mixer());
 }
 
 bool
@@ -76,8 +91,8 @@ GameWindow::play()
     srand(time(NULL));
 
     msg = -1;
-    reset();
-    begin();
+    go_welcome();
+    
 
     while(msg != GAME_EXIT)
     {
@@ -114,8 +129,8 @@ GameWindow::GameWindow()
     height = info.y2 - info.y1;
     // width = 1920;
     height = height/2;
-    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW);
-    display = al_create_display(width, height);
+    al_set_new_display_flags(ALLEGRO_FULLSCREEN_WINDOW | ALLEGRO_RESIZABLE);
+    display = al_create_display(width, 2*height);
     event_queue = al_create_event_queue();
 
     timer = al_create_timer(1.0 / FPS);
@@ -143,10 +158,10 @@ GameWindow::GameWindow()
     al_install_mouse();    // install mouse event
     al_install_audio();    // install audio event
 
-    font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",12,0); // load small font
-    Medium_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",24,0); //load medium font
-    Large_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",36,0); //load large font
-    Huge_font = al_load_ttf_font("assets/fonts/Caviar_Dreams_Bold.ttf",72,0); //load large font
+    font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",12,0); // load small font
+    Medium_font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",24,0); //load medium font
+    Large_font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",36,0); //load large font
+    Huge_font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",72,0); //load large font
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -161,15 +176,29 @@ GameWindow::GameWindow()
 }
 
 void
+GameWindow::go_welcome() {
+    reset();
+    begin();
+    status = WELCOME;
+}
+
+void
+GameWindow::play_game() {
+    status = GAME;
+    al_stop_sample_instance(welcomeSound);
+    al_play_sample_instance(backgroundSound);
+    al_start_timer(second_timer);
+    al_start_timer(food_timer);
+}
+
+void
 GameWindow::begin()
 {
     draw();
 
-    // al_play_sample_instance(backgroundSound);
+    al_play_sample_instance(welcomeSound);
 
     al_start_timer(timer);
-    al_start_timer(second_timer);
-    al_start_timer(food_timer);
 }
 
 int
@@ -187,26 +216,35 @@ GameWindow::run()
 int
 GameWindow::update()
 {
-    // models' status ex. moving
+    // cout << "update" << endl;
+    // welcome page
+    if(status==WELCOME) 
+        welcome->update(width, height, mouse_x, mouse_y);
 
-    crew1->update(width, height);
-    crew2->update(width, height);
-    for(auto pot: pots) {
-        vector<Food*> shouldRemove = pot->update();
-        for(auto food: shouldRemove) {
-            int fid = food->get_id();
-            if(fid==-1) { //new food
-                food->set_id(food_pk);
-                food_pk++;
-                foods.push_back(food);
-            }
-            else { //old food
-                for(auto it=foods.begin(); it!=foods.end(); ) {
-                    if((*it)->get_id()==fid) {
-                        it = foods.erase(it);
-                    }
-                    else {
-                        it++;
+    // models' status ex. moving
+    else if(status==GAME) {
+        bool dead1 = crew1->update(width, height);
+        bool dead2 = crew2->update(width, height);
+        if(dead1 || dead2) {
+            go_welcome();
+        }
+        for(auto pot: pots) {
+            vector<Food*> shouldRemove = pot->update();
+            for(auto food: shouldRemove) {
+                int fid = food->get_id();
+                if(fid==-1) { //new food
+                    food->set_id(food_pk);
+                    food_pk++;
+                    foods.push_back(food);
+                }
+                else { //old food
+                    for(auto it=foods.begin(); it!=foods.end(); ) {
+                        if((*it)->get_id()==fid) {
+                            it = foods.erase(it);
+                        }
+                        else {
+                            it++;
+                        }
                     }
                 }
             }
@@ -220,20 +258,27 @@ GameWindow::reset()
 {
     int c1 = rand()%14;
     int c2;
-    while((c2=rand()%14)==c1) ;
+    while((c2=rand()%14)==c1);
+    if(crew1)
+        delete crew1;
+    if(crew2)
+        delete crew2;
     crew1 = new Crew(0, (Color)c1);
     crew2 = new Crew(1, (Color)c2);
     mute = false;
     redraw = false;
 
-    fstream config("config/fire.txt", ios_base::in);
-    fires.clear();
+    for(auto food: foods) {
+        if(food)
+            delete food;
+    }
+    for(auto pot: pots) {
+        if(pot)
+            delete pot;
+    }
     foods.clear();
     pots.clear();
-    int x, y;
-    while(config >> x >> y) {
-        fires.push_back(Fire(x, y));
-    }
+    food_pk = 0;
     for(int i=0; i<20; i++) {
         Gredient g = (Gredient)(i%10);
         foods.push_back(new Food(g, food_pk));
@@ -248,6 +293,7 @@ GameWindow::reset()
 
     // stop sample instance
     al_stop_sample_instance(backgroundSound);
+    al_stop_sample_instance(welcomeSound);
     al_stop_sample_instance(startSound);
 
     // stop timer
@@ -259,7 +305,15 @@ GameWindow::reset()
 void
 GameWindow::destroy()
 {
-    reset();
+    // stop sample instance
+    al_stop_sample_instance(backgroundSound);
+    al_stop_sample_instance(welcomeSound);
+    al_stop_sample_instance(startSound);
+
+    // stop timer
+    al_stop_timer(timer);
+    al_stop_timer(second_timer);
+    al_stop_timer(food_timer);
 
     al_destroy_display(display);
     al_destroy_event_queue(event_queue);
@@ -273,11 +327,15 @@ GameWindow::destroy()
     al_destroy_timer(food_timer);
 
     for(auto food: foods) {
-        delete food;
+        if(food)
+            delete food;
     }
     for(auto pot: pots) {
-        delete pot;
+        if(pot)
+            delete pot;
     }
+    for(auto fire: fires)
+        delete fire;
 
     for(auto image: food_images)
         al_destroy_bitmap(image.second);
@@ -286,12 +344,12 @@ GameWindow::destroy()
 
     al_destroy_bitmap(icon);
     al_destroy_bitmap(background);
-    if(screen!=NULL)
-    al_destroy_bitmap(screen);
-    if(fbo!=NULL)
+    // al_destroy_bitmap(screen);
+    // cout << "hihi screen" << endl;
     al_destroy_bitmap(fbo);
 
     al_destroy_sample(sample);
+    al_destroy_sample_instance(welcomeSound);
     al_destroy_sample_instance(startSound);
     al_destroy_sample_instance(backgroundSound);
 
@@ -299,6 +357,7 @@ GameWindow::destroy()
     delete crew2;
     delete gmap;
     delete menu;
+    delete welcome;
 
 }
 
@@ -331,6 +390,11 @@ GameWindow::process_event()
 
         }
     }
+    else if(event.type == ALLEGRO_EVENT_DISPLAY_RESIZE) {
+        al_acknowledge_resize(display);
+        width = event.display.width;
+        height = event.display.height/2;
+    }
     else if(event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
         return GAME_EXIT;
     }
@@ -344,6 +408,11 @@ GameWindow::process_event()
         switch(event.keyboard.keycode) {
             case ALLEGRO_KEY_ESCAPE:
                 menu->toggle();
+                break;
+            case ALLEGRO_KEY_C:
+                reset();
+                begin();
+                play_game();
                 break;
             case ALLEGRO_KEY_Q:
                 return GAME_EXIT;
@@ -412,10 +481,10 @@ GameWindow::process_event()
                             }
                         }
                         if(obj->get_type()==POT) {
-                            Fire target_fire;
+                            Fire* target_fire;
                             float fire_min_dist = 400;
                             for(auto fire: fires) {
-                                int dist = pow(fire.get_x()-obj->get_x(), 2)+pow(fire.get_y()-obj->get_y(), 2);
+                                int dist = pow(fire->get_x()-obj->get_x(), 2)+pow(fire->get_y()-obj->get_y(), 2);
                                 if(dist<fire_min_dist) {
                                     fire_min_dist = dist;
                                     target_fire = fire;
@@ -423,7 +492,7 @@ GameWindow::process_event()
                             }
                             if(fire_min_dist!=400) {
                                 Pot*& tmp = (Pot*&)obj;
-                                tmp->set_pos(target_fire.get_x(), target_fire.get_y()-20);
+                                tmp->set_pos(target_fire->get_x(), target_fire->get_y()-20);
                                 tmp->set_ready(true);
                             }
                             else {
@@ -448,6 +517,10 @@ GameWindow::process_event()
                 }
                 break;
             case ALLEGRO_KEY_P:
+                if(status == WELCOME) {
+                    play_game();
+                    break;
+                }
                 if(crew1->ableToPick()) {
                     for(auto& food: foods) {
                         int dist = pow(food->get_x()-x1, 2)+pow(food->get_y()-y1, 2);
@@ -488,10 +561,10 @@ GameWindow::process_event()
                             }
                         }
                         if(obj->get_type()==POT) {
-                            Fire target_fire;
+                            Fire* target_fire;
                             float fire_min_dist = 400;
                             for(auto fire: fires) {
-                                int dist = pow(fire.get_x()-obj->get_x(), 2)+pow(fire.get_y()-obj->get_y(), 2);
+                                int dist = pow(fire->get_x()-obj->get_x(), 2)+pow(fire->get_y()-obj->get_y(), 2);
                                 if(dist<fire_min_dist) {
                                     fire_min_dist = dist;
                                     target_fire = fire;
@@ -499,7 +572,7 @@ GameWindow::process_event()
                             }
                             if(fire_min_dist!=400) {
                                 Pot*& tmp = (Pot*&)obj;
-                                tmp->set_pos(target_fire.get_x(), target_fire.get_y()-20);
+                                tmp->set_pos(target_fire->get_x(), target_fire->get_y()-20);
                                 tmp->set_ready(true);
                             }
                             else {
@@ -573,6 +646,17 @@ GameWindow::process_event()
 
         }
     }
+    else if(event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
+        if(event.mouse.button == 1) {
+            if(status==WELCOME) {
+                int r = welcome->click(width, height, event.mouse.x, event.mouse.y);
+                if(r==0) play_game();
+            }
+        }
+        else if(event.mouse.button == 2) {
+
+        }
+    }
     else if(event.type == ALLEGRO_EVENT_MOUSE_AXES){
         mouse_x = event.mouse.x;
         mouse_y = event.mouse.y;
@@ -594,10 +678,10 @@ GameWindow::process_event()
 void
 GameWindow::draw()
 {
-    if(WELCOME) {
-        al_clear_to_color(WHITE);
+    if(status == WELCOME) {
+        welcome->draw(width, height);
     }
-    else if(GAME) {
+    else if(status == GAME) {
         // draw to fbo
         al_set_target_bitmap(fbo);
         al_clear_to_color(BLACK);
@@ -617,7 +701,7 @@ GameWindow::draw()
         crew1->draw(width, height, scale);
         crew2->draw(width, height, scale);
         for(auto fire: fires) {
-            fire.draw(width, height, scale);
+            fire->draw(width, height, scale);
         }
         for(auto food: foods) {
             food->draw(width, height, scale);
@@ -667,7 +751,7 @@ GameWindow::draw()
         int i=0;
         al_draw_rounded_rectangle(20, 20, 900, height/2 - 20, 10, 10, BLACK, 10);
         for(auto pot: pots) {
-            al_draw_scaled_bitmap(pot->get_image(), 0, 0, 500, 500, 100+150*i, 150, 100, 100, 0);
+            al_draw_scaled_bitmap(pot->get_image(), 0, 0, 100, 100, 100+150*i, 150, 100, 100, 0);
             if(pot->get_status()==1 && pot->is_ready()) { // cooking
                 al_draw_text(Large_font, BLACK, 150+150*i, 250, ALLEGRO_ALIGN_CENTER, to_string(pot->get_remain_time()).c_str());
             }
@@ -688,29 +772,29 @@ GameWindow::draw()
             if(i<5) h = 50;
             else if(i<10) h = 170;
             else h = 290;
-            al_draw_scaled_bitmap(food_images[g.first], 0, 0, 500, 500, 1000+220*(i%5), h, 100, 100, 0);
+            al_draw_scaled_bitmap(food_images[g.first], 0, 0, 100, 100, 1000+220*(i%5), h, 100, 100, 0);
             al_draw_text(Large_font, BLACK, 1100+220*(i%5), h+30, ALLEGRO_ALIGN_LEFT, ("*"+to_string(g.second)).c_str());
             i++;
         }
         //recipe
         //lobster
-        al_draw_scaled_bitmap(food_images[0], 0, 0, 500, 500, 2250, 50, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[1], 0, 0, 500, 500, 2350, 50, 100, 100, 0);
-        al_draw_scaled_bitmap(pot_images[1], 0, 0, 500, 500, 2450, 50, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[12], 0, 0, 500, 500, 2700, 50, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[0], 0, 0, 100, 100, 2250, 50, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[1], 0, 0, 100, 100, 2350, 50, 100, 100, 0);
+        al_draw_scaled_bitmap(pot_images[1], 0, 0, 100, 100, 2450, 50, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[12], 0, 0, 100, 100, 2700, 50, 100, 100, 0);
         //fried rice
-        al_draw_scaled_bitmap(food_images[2], 0, 0, 500, 500, 2200, 170, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[3], 0, 0, 500, 500, 2300, 170, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[4], 0, 0, 500, 500, 2400, 170, 100, 100, 0);
-        al_draw_scaled_bitmap(pot_images[0], 0, 0, 500, 500, 2500, 170, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[11], 0, 0, 500, 500, 2700, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[2], 0, 0, 100, 100, 2200, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[3], 0, 0, 100, 100, 2300, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[4], 0, 0, 100, 100, 2400, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(pot_images[0], 0, 0, 100, 100, 2500, 170, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[11], 0, 0, 100, 100, 2700, 170, 100, 100, 0);
         //steak
-        al_draw_scaled_bitmap(food_images[5], 0, 0, 500, 500, 2150, 290, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[6], 0, 0, 500, 500, 2250, 290, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[7], 0, 0, 500, 500, 2350, 290, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[8], 0, 0, 500, 500, 2450, 290, 100, 100, 0);
-        al_draw_scaled_bitmap(pot_images[0], 0, 0, 500, 500, 2550, 290, 100, 100, 0);
-        al_draw_scaled_bitmap(food_images[13], 0, 0, 500, 500, 2700, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[5], 0, 0, 100, 100, 2150, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[6], 0, 0, 100, 100, 2250, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[7], 0, 0, 100, 100, 2350, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[8], 0, 0, 100, 100, 2450, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(pot_images[0], 0, 0, 100, 100, 2550, 290, 100, 100, 0);
+        al_draw_scaled_bitmap(food_images[13], 0, 0, 100, 100, 2700, 290, 100, 100, 0);
 
         menu->draw(width, height);
     }
