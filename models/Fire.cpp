@@ -16,7 +16,7 @@ Fire::~Fire() {
 
 void Fire::draw(int width, int height, int scale) {
 
-    float scale_factor = 0.57*height/1080;
+    float scale_factor = 1.9*2/9;
     
     if(image != NULL) {
         int w, h;

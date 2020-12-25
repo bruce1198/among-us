@@ -158,56 +158,7 @@ void Food::drawOnScreen(int x, int y) {
 
 void Food::draw(int width, int height, int scale) {
     int w, h;
-    float scale_factor = 0.57*height/1080;
-    // switch (type) {
-    // case LOBSTER:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case LU:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case EGG:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case RICE:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case TSON:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case MEAT:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case BROCO:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case CARROT:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case MUSH:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case RIVER:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case LOBSTERCOOKED:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case FRIED:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case STEAK:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case WATER:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // case POOP:
-    //     scale_factor = 0.38*0.3*height/1080;
-    //     break;
-    // default:
-    //     break;
-    // }
+    float scale_factor = 1.9*2/9;
 
     if(image != NULL) {
         w = al_get_bitmap_width(image);
