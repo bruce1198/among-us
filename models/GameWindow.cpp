@@ -1,5 +1,6 @@
 #include "GameWindow.h"
 #include <iostream>
+#include <cmath>
 
 #define WHITE al_map_rgb(255, 255, 255)
 #define BLACK al_map_rgb(0, 0, 0)
@@ -685,7 +686,7 @@ GameWindow::draw()
         // draw to fbo
         al_set_target_bitmap(fbo);
         al_clear_to_color(BLACK);
-        
+
         ALLEGRO_TRANSFORM trans, prev_trans;
         al_copy_transform(&prev_trans, al_get_current_transform());
         al_identity_transform(&trans);

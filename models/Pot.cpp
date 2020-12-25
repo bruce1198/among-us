@@ -1,5 +1,6 @@
 #include "Pot.h"
 #include <iostream>
+#include <algorithm>
 
 Pot::Pot(PotType type) {
     obj_type = POT;
@@ -114,7 +115,7 @@ vector<Food*> Pot::update() {
 
 void Pot::time_ellapsed() {
     if(status == 1 && ready) {
-        cout << "remain time: " << cook_time << endl; 
+        cout << "remain time: " << cook_time << endl;
         cook_time--;
         if(cook_time==0) {
             status = 2;
