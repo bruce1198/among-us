@@ -52,7 +52,7 @@ GameWindow::init()
     }
 
     screen = al_get_target_bitmap();
-    al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR);
+    al_set_new_bitmap_flags(ALLEGRO_MIN_LINEAR | ALLEGRO_MAG_LINEAR | ALLEGRO_NO_PRESERVE_TEXTURE);
     fbo = al_create_bitmap(fbo_scale*al_get_bitmap_width(background), fbo_scale*al_get_bitmap_height(background));
 
     al_set_display_icon(display, icon);
