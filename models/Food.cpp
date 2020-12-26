@@ -158,7 +158,7 @@ void Food::drawOnScreen(int x, int y) {
 
 void Food::draw(int width, int height, int scale) {
     int w, h;
-    float scale_factor = 1.9*2/9;
+    float scale_factor = 1.9*0.25;
 
     if(image != NULL) {
         w = al_get_bitmap_width(image);

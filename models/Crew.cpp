@@ -124,13 +124,13 @@ void Crew::draw(int width, int height, int scale) {
     if(this->direction==0 || this->direction==15 || this->direction==3 || this->direction==12) {
         w = al_get_bitmap_width(images[22]);
         h = al_get_bitmap_height(images[22]);
-        scale_factor = 0.38*2/9;
+        scale_factor = 0.38*0.25;
         al_draw_scaled_bitmap(images[22], 0, 0, w, h, pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, flag);
     }
     else {
         w = al_get_bitmap_width(images[sprite_pos]);
         h = al_get_bitmap_height(images[sprite_pos]);
-        scale_factor = 0.2*2/9;
+        scale_factor = 0.2*0.25;
         al_draw_scaled_bitmap(images[sprite_pos], 0, 0, w, h, pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, w*scale_factor, h*scale_factor, flag);
         al_draw_rectangle(pos_x - w*scale_factor/2, pos_y - h*scale_factor/2, pos_x + w*scale_factor/2, pos_y + h*scale_factor/2, al_map_rgb(255, 0, 0), 2);
     }
@@ -274,7 +274,7 @@ bool Crew::update(int width, int height) {
 
     // update crew status
     int w, h;
-    float scale_factor = 0.2*2/9;
+    float scale_factor = 0.2*0.25;
     w = al_get_bitmap_width(images[sprite_pos])*scale_factor;
     h = al_get_bitmap_height(images[sprite_pos])*scale_factor;
     counter++;
