@@ -722,7 +722,17 @@ GameWindow::draw()
         // draw crew1 and shadow
         al_draw_scaled_bitmap(fbo, fbo_scale*((*crew1)['x']-width/(4*scale_factor)), fbo_scale*((*crew1)['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, width/2, height/2, width/2, height, 0);
         al_draw_scaled_bitmap(crew1->getShadow(), (*crew1)['x']-width/(4*scale_factor), (*crew1)['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, width/2, height/2, width/2, height, 0);
-        // draw status
+        /*===============================crew2's view=====================================*/
+        al_draw_scaled_bitmap(fbo, fbo_scale*((*crew2)['x']-width/(4*scale_factor)), fbo_scale*((*crew2)['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, 0, height/2, width/2, height, 0);
+        al_draw_scaled_bitmap(crew2->getShadow(), (*crew2)['x']-width/(4*scale_factor), (*crew2)['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
+        /*=============================draw split line====================================*/
+        al_draw_filled_rectangle(width/2-5, height/2, width/2+5, 3*height/2, al_map_rgb(255, 0, 0));
+        /*===============================draw status======================================*/
+        al_copy_transform(&prev_trans, al_get_current_transform());
+        al_identity_transform(&trans);
+        al_scale_transform(&trans, height/900.0, height/900.0);
+        al_use_transform(&trans);
+        // crew1
         al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
         al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
         al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
@@ -730,12 +740,8 @@ GameWindow::draw()
         if(crew1->get_energy()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+crew1->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
         al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
         if(crew1->get_water()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+crew1->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
-        // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
         if(crew1->get_poison()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+190, width/2+width/8+crew1->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
-        /*===============================crew2's view=====================================*/
-        al_draw_scaled_bitmap(fbo, fbo_scale*((*crew2)['x']-width/(4*scale_factor)), fbo_scale*((*crew2)['y']-height/(2*scale_factor)), fbo_scale*width/(2*scale_factor), fbo_scale*height/scale_factor, 0, height/2, width/2, height, 0);
-        al_draw_scaled_bitmap(crew2->getShadow(), (*crew2)['x']-width/(4*scale_factor), (*crew2)['y']-height/(2*scale_factor), width/(2*scale_factor), height/scale_factor, 0, height/2, width/2, height, 0);
-        // draw status
+        // crew2
         al_draw_text(Large_font, BLACK, width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
         al_draw_text(Large_font, BLACK, width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
         al_draw_text(Large_font, BLACK, width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
@@ -743,18 +749,10 @@ GameWindow::draw()
         if(crew2->get_energy()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+crew2->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
         al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
         if(crew2->get_water()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+crew2->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
-        // al_draw_filled_rectangle(width/8, 3*height/2+190, width/8+width/3, 3*height/2+240, POISON_BK);
         if(crew2->get_poison()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+190, width/8+crew2->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
-        /*=============================draw split line====================================*/
-        al_draw_filled_rectangle(width/2-5, height/2, width/2+5, 3*height/2, al_map_rgb(255, 0, 0));
-        // draw status
-        al_copy_transform(&prev_trans, al_get_current_transform());
-        al_identity_transform(&trans);
-        al_scale_transform(&trans, height/900.0, height/900.0);
-        al_use_transform(&trans);
         // pot
         int i=0;
-        al_draw_rounded_rectangle(20, 20, 900, 400 - 20, 10, 10, BLACK, 10);
+        al_draw_rounded_rectangle(20, 20, 900, 450 - 20, 10, 10, BLACK, 10);
         for(auto pot: pots) {
             al_draw_scaled_bitmap(pot->get_image(), 0, 0, 100, 100, 100+150*i, 200-50, 100, 100, 0);
             if(pot->get_status()==1 && pot->is_ready()) { // cooking
@@ -771,7 +769,7 @@ GameWindow::draw()
             counts[food->get_food_type()]++;
         }
         i=0;
-        al_draw_rounded_rectangle(950, 20, 2100, 400 - 20, 10, 10, BLACK, 10);
+        al_draw_rounded_rectangle(950, 20, 2100, 450 - 20, 10, 10, BLACK, 10);
         for(auto g: counts) {
             int h;
             if(i<5) h = 50;
