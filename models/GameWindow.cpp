@@ -162,7 +162,7 @@ GameWindow::GameWindow()
     font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",12,0); // load small font
     Medium_font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",24,0); //load medium font
     Large_font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",36,0); //load large font
-    Huge_font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",72,0); //load large font
+    Huge_font = al_load_ttf_font("assets/fonts/open-sans/OpenSans-Bold.ttf",72*height/800,0); //load large font
 
     al_register_event_source(event_queue, al_get_display_event_source(display));
     al_register_event_source(event_queue, al_get_keyboard_event_source());
@@ -748,11 +748,15 @@ GameWindow::draw()
         /*=============================draw split line====================================*/
         al_draw_filled_rectangle(width/2-5, height/2, width/2+5, 3*height/2, al_map_rgb(255, 0, 0));
         // draw status
+        al_copy_transform(&prev_trans, al_get_current_transform());
+        al_identity_transform(&trans);
+        al_scale_transform(&trans, height/800, height/800);
+        al_use_transform(&trans);
         // pot
         int i=0;
         al_draw_rounded_rectangle(20, 20, 900, height/2 - 20, 10, 10, BLACK, 10);
         for(auto pot: pots) {
-            al_draw_scaled_bitmap(pot->get_image(), 0, 0, 100, 100, 100+150*i, 150, 100, 100, 0);
+            al_draw_scaled_bitmap(pot->get_image(), 0, 0, 100, 100, 100+150*i, height/4-50*height/800, 100*height/800, 100*height/800, 0);
             if(pot->get_status()==1 && pot->is_ready()) { // cooking
                 al_draw_text(Large_font, BLACK, 150+150*i, 250, ALLEGRO_ALIGN_CENTER, to_string(pot->get_remain_time()).c_str());
             }
@@ -798,6 +802,7 @@ GameWindow::draw()
         al_draw_scaled_bitmap(food_images[13], 0, 0, 100, 100, 2700, 290, 100, 100, 0);
 
         menu->draw(width, height);
+        al_use_transform(&prev_trans);
     }
 
     al_flip_display();
