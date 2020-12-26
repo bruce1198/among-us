@@ -733,23 +733,23 @@ GameWindow::draw()
         al_scale_transform(&trans, height/900.0, height/900.0);
         al_use_transform(&trans);
         // crew1
-        al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
-        al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
-        al_draw_text(Large_font, BLACK, width/2+width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
-        al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
-        if(crew1->get_energy()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+50, width/2+width/8+crew1->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
-        al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
-        if(crew1->get_water()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+120, width/2+width/8+crew1->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
-        if(crew1->get_poison()!=0) al_draw_filled_rounded_rectangle(width/2+width/8, 3*height/2+190, width/2+width/8+crew1->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
+        al_draw_text(Large_font, BLACK, 1800, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
+        al_draw_text(Large_font, BLACK, 1800, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
+        al_draw_text(Large_font, BLACK, 1800, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
+        al_draw_filled_rounded_rectangle(1800, 3*height/2+50, 1800+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
+        if(crew1->get_energy()!=0) al_draw_filled_rounded_rectangle(1800, 3*height/2+50, 1800+crew1->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
+        al_draw_filled_rounded_rectangle(1800, 3*height/2+120, 1800+width/3, 3*height/2+170, 5, 5, WATER_BK);
+        if(crew1->get_water()!=0) al_draw_filled_rounded_rectangle(1800, 3*height/2+120, 1800+crew1->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
+        if(crew1->get_poison()!=0) al_draw_filled_rounded_rectangle(1800, 3*height/2+190, 1800+crew1->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
         // crew2
-        al_draw_text(Large_font, BLACK, width/8, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
-        al_draw_text(Large_font, BLACK, width/8, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
-        al_draw_text(Large_font, BLACK, width/8, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
-        al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
-        if(crew2->get_energy()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, width/8+crew2->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
-        al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
-        if(crew2->get_water()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+120, width/8+crew2->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
-        if(crew2->get_poison()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+190, width/8+crew2->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
+        al_draw_text(Large_font, BLACK, 360, 3*height/2+50, ALLEGRO_ALIGN_RIGHT, "ENERGY: ");
+        al_draw_text(Large_font, BLACK, 360, 3*height/2+120, ALLEGRO_ALIGN_RIGHT, "WATER CONTENT: ");
+        al_draw_text(Large_font, BLACK, 360, 3*height/2+190, ALLEGRO_ALIGN_RIGHT, "INTOXICOTION: ");
+        al_draw_filled_rounded_rectangle(360, 3*height/2+50, width/8+width/3, 3*height/2+100, 5, 5, ENERGY_BK);
+        if(crew2->get_energy()!=0) al_draw_filled_rounded_rectangle(width/8, 3*height/2+50, 360+crew2->get_energy()*width/300, 3*height/2+100, 5, 5, ENERGY);
+        al_draw_filled_rounded_rectangle(360, 3*height/2+120, width/8+width/3, 3*height/2+170, 5, 5, WATER_BK);
+        if(crew2->get_water()!=0) al_draw_filled_rounded_rectangle(360, 3*height/2+120, 360+crew2->get_water()*width/300, 3*height/2+170, 5, 5, WATER);
+        if(crew2->get_poison()!=0) al_draw_filled_rounded_rectangle(360, 3*height/2+190, 360+crew2->get_poison()*width/300, 3*height/2+240, 5, 5, POISON);
         // pot
         int i=0;
         al_draw_rounded_rectangle(20, 20, 900, 450 - 20, 10, 10, BLACK, 10);
