@@ -17,7 +17,8 @@ class Welcome {
 private:
     ALLEGRO_BITMAP* image;
     ALLEGRO_FONT *font = NULL;
-    int hover;
+    ALLEGRO_FONT *sfont = NULL;
+    int hover[2];
 public:
     Welcome(/* args */);
     ~Welcome();

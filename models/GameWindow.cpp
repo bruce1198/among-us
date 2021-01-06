@@ -224,27 +224,30 @@ GameWindow::update()
 
     // models' status ex. moving
     else if(status==GAME) {
-        bool dead1 = crew1->update(width, height);
-        bool dead2 = crew2->update(width, height);
-        if(dead1 || dead2) {
-            go_welcome();
-        }
-        for(auto pot: pots) {
-            vector<Food*> shouldRemove = pot->update();
-            for(auto food: shouldRemove) {
-                int fid = food->get_id();
-                if(fid==-1) { //new food
-                    food->set_id(food_pk);
-                    food_pk++;
-                    foods.push_back(food);
-                }
-                else { //old food
-                    for(auto it=foods.begin(); it!=foods.end(); ) {
-                        if((*it)->get_id()==fid) {
-                            it = foods.erase(it);
-                        }
-                        else {
-                            it++;
+        menu->update(width, height, mouse_x, mouse_y);
+        if(!pause) {
+            bool dead1 = crew1->update(width, height);
+            bool dead2 = crew2->update(width, height);
+            if(dead1 || dead2) {
+                go_welcome();
+            }
+            for(auto pot: pots) {
+                vector<Food*> shouldRemove = pot->update();
+                for(auto food: shouldRemove) {
+                    int fid = food->get_id();
+                    if(fid==-1) { //new food
+                        food->set_id(food_pk);
+                        food_pk++;
+                        foods.push_back(food);
+                    }
+                    else { //old food
+                        for(auto it=foods.begin(); it!=foods.end(); ) {
+                            if((*it)->get_id()==fid) {
+                                it = foods.erase(it);
+                            }
+                            else {
+                                it++;
+                            }
                         }
                     }
                 }
@@ -409,6 +412,7 @@ GameWindow::process_event()
         switch(event.keyboard.keycode) {
             case ALLEGRO_KEY_ESCAPE:
                 menu->toggle();
+                pause = !pause;
                 break;
             case ALLEGRO_KEY_C:
                 reset();
@@ -418,31 +422,31 @@ GameWindow::process_event()
             case ALLEGRO_KEY_Q:
                 return GAME_EXIT;
             case ALLEGRO_KEY_UP:
-                crew1->set_direction(UP);
+                if(!pause) crew1->set_direction(UP);
                 break;
             case ALLEGRO_KEY_DOWN:
-                crew1->set_direction(DOWN);
+                if(!pause) crew1->set_direction(DOWN);
                 break;
             case ALLEGRO_KEY_LEFT:
-                crew1->set_direction(LEFT);
+                if(!pause) crew1->set_direction(LEFT);
                 break;
             case ALLEGRO_KEY_RIGHT:
-                crew1->set_direction(RIGHT);
+                if(!pause) crew1->set_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_W:
-                crew2->set_direction(UP);
+                if(!pause) crew2->set_direction(UP);
                 break;
             case ALLEGRO_KEY_S:
-                crew2->set_direction(DOWN);
+                if(!pause) crew2->set_direction(DOWN);
                 break;
             case ALLEGRO_KEY_A:
-                crew2->set_direction(LEFT);
+                if(!pause) crew2->set_direction(LEFT);
                 break;
             case ALLEGRO_KEY_D:
-                crew2->set_direction(RIGHT);
+                if(!pause) crew2->set_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_R:
-                if(crew2->ableToPick()) {
+                if(crew2->ableToPick() && !pause) {
                     for(auto& food: foods) {
                         int dist = pow(food->get_x()-(*crew2)['x'], 2)+pow(food->get_y()-(*crew2)['y'], 2);
                         if(dist<min_dist && !food->is_in_pot()) {
@@ -464,7 +468,7 @@ GameWindow::process_event()
                         crew2->pick(target);
                     }
                 }
-                else {
+                else if(!pause){
                     Object* obj = crew2->put();
                     if(obj) {
                         if(obj->get_type()==FOOD) {
@@ -505,7 +509,7 @@ GameWindow::process_event()
                 }
                 break;
             case ALLEGRO_KEY_E:
-                {
+                if(!pause){
                     int fid = crew2->eat();
                     for(auto it=foods.begin(); it!=foods.end(); ) {
                         if((*it)->get_id()==fid) {
@@ -522,7 +526,7 @@ GameWindow::process_event()
                     play_game();
                     break;
                 }
-                if(crew1->ableToPick()) {
+                if(crew1->ableToPick() && !pause) {
                     for(auto& food: foods) {
                         int dist = pow(food->get_x()-x1, 2)+pow(food->get_y()-y1, 2);
                         if(dist<min_dist && !food->is_in_pot()) {
@@ -544,7 +548,7 @@ GameWindow::process_event()
                         crew1->pick(target);
                     }
                 }
-                else {
+                else if(!pause) {
                     Object* obj = crew1->put();
                     if(obj) {
                         if(obj->get_type()==FOOD) {
@@ -585,7 +589,7 @@ GameWindow::process_event()
                 }
                 break;
             case ALLEGRO_KEY_O:
-                {
+                if(!pause) {
                     int fid = crew1->eat();
                     for(auto it=foods.begin(); it!=foods.end(); ) {
                         if((*it)->get_id()==fid) {
@@ -614,28 +618,28 @@ GameWindow::process_event()
     else if(event.type == ALLEGRO_EVENT_KEY_UP) {
         switch(event.keyboard.keycode) {
             case ALLEGRO_KEY_UP:
-                crew1->remove_direction(UP);
+                if(!pause) crew1->remove_direction(UP);
                 break;
             case ALLEGRO_KEY_DOWN:
-                crew1->remove_direction(DOWN);
+                if(!pause) crew1->remove_direction(DOWN);
                 break;
             case ALLEGRO_KEY_LEFT:
-                crew1->remove_direction(LEFT);
+                if(!pause) crew1->remove_direction(LEFT);
                 break;
             case ALLEGRO_KEY_RIGHT:
-                crew1->remove_direction(RIGHT);
+                if(!pause) crew1->remove_direction(RIGHT);
                 break;
             case ALLEGRO_KEY_W:
-                crew2->remove_direction(UP);
+                if(!pause) crew2->remove_direction(UP);
                 break;
             case ALLEGRO_KEY_S:
-                crew2->remove_direction(DOWN);
+                if(!pause) crew2->remove_direction(DOWN);
                 break;
             case ALLEGRO_KEY_A:
-                crew2->remove_direction(LEFT);
+                if(!pause) crew2->remove_direction(LEFT);
                 break;
             case ALLEGRO_KEY_D:
-                crew2->remove_direction(RIGHT);
+                if(!pause) crew2->remove_direction(RIGHT);
                 break;
         }
     }
@@ -652,6 +656,20 @@ GameWindow::process_event()
             if(status==WELCOME) {
                 int r = welcome->click(width, height, event.mouse.x, event.mouse.y);
                 if(r==0) play_game();
+                else if(r==1) return GAME_EXIT;
+            }
+            else if(status==GAME) {
+                int r = menu->click(width, height, event.mouse.x, event.mouse.y);
+                if(r==0) {
+                    pause = false;
+                }
+                else if(r==1) {
+                    pause = false;
+                    reset();
+                    begin();
+                    play_game();
+                }
+                else if(r==2) return GAME_EXIT;
             }
         }
         else if(event.mouse.button == 2) {
@@ -681,6 +699,22 @@ GameWindow::draw()
 {
     if(status == WELCOME) {
         welcome->draw(width, height);
+        // ALLEGRO_TRANSFORM trans, prev_trans;
+        // al_copy_transform(&prev_trans, al_get_current_transform());
+        // al_identity_transform(&trans);
+        // al_scale_transform(&trans, height/900.0, height/900.0);
+        // al_use_transform(&trans);
+        // // food
+        // map<int, int> counts;
+        // for(auto food: foods) {
+        //     counts[food->get_food_type()]++;
+        // }
+        // int i=0;
+        // for(auto g: counts) {
+        //     al_draw_scaled_bitmap(food_images[g.first], 0, 0, 100, 100, width/2-900+100*i, 1650, 200, 200, 0);
+        //     i++;
+        // }
+        // al_use_transform(&prev_trans);
     }
     else if(status == GAME) {
         // draw to fbo
@@ -799,8 +833,8 @@ GameWindow::draw()
         al_draw_scaled_bitmap(pot_images[0], 0, 0, 100, 100, 2550, 290, 100, 100, 0);
         al_draw_scaled_bitmap(food_images[13], 0, 0, 100, 100, 2700, 290, 100, 100, 0);
 
-        menu->draw(width, height);
         al_use_transform(&prev_trans);
+        menu->draw(width, height);
     }
 
     al_flip_display();

@@ -113,6 +113,7 @@ private:
 
     int mouse_x, mouse_y;
 
+    bool pause = false;
     bool redraw = false;
     bool mute = false;
 };
